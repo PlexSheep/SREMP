@@ -1,28 +1,109 @@
-use async_channel::Sender;
+use std::{net::SocketAddr, sync::Arc};
+
+use ed25519_dalek::VerifyingKey;
 use sremp_core::{
+    chat::messages::SharedMessage,
     domain::{NetworkCommand, NetworkEvent},
-    error::CoreResult,
+    error::CoreError,
+    identity::UserIdentity,
 };
 
-use crate::domain::{ClientDomain, UiCommand, UiEvent};
+use crate::{
+    domain::{ClientDomain, UiCommand, UiEvent},
+    error::{ClientError, ClientResult},
+};
 
 impl ClientDomain {
-    pub(super) async fn process_ui_command(
-        &mut self,
-        command: UiCommand,
-        _command_tx: Sender<NetworkCommand>,
-    ) -> CoreResult<UiEvent> {
+    pub(super) async fn process_ui_command(&mut self, command: UiCommand) -> ClientResult<()> {
         log::info!("Processing Ui Command: {command}");
-        let event = match command {
-            _ => todo!(),
-        };
-        log::info!("Event emerged after processing the Ui Command: {event}");
-        Ok(event)
+        match command {
+            UiCommand::StopListener => self.listener_stop().await,
+            UiCommand::StartListener(local_addr) => self.listener_start(local_addr).await,
+            UiCommand::Connect(remote) => self.connect(remote).await,
+            UiCommand::Disconnect(remote) => self.disconnect(remote).await,
+            UiCommand::SetIdentity(ident) => self.set_identity(ident).await,
+            UiCommand::SendMessage(key, msg) => self.send_message(key, msg).await,
+            UiCommand::LoadChat(key) => self.load_chat(key).await,
+        }
     }
-    pub(super) async fn process_net_event(&mut self, event: NetworkEvent) -> CoreResult<()> {
+
+    pub(super) async fn process_net_event(&mut self, event: NetworkEvent) -> ClientResult<()> {
         log::info!("Processing Net Event: {event}");
         match event {
             _ => todo!(),
+        }
+        Ok(())
+    }
+
+    pub(crate) async fn listener_stop(&self) -> ClientResult<()> {
+        self.net_command_channel()
+            .send(NetworkCommand::StopListener)
+            .await
+            .map_err(CoreError::from)?;
+        Ok(())
+    }
+
+    pub(crate) async fn listener_start(&self, addr: SocketAddr) -> ClientResult<()> {
+        self.net_command_channel()
+            .send(NetworkCommand::StartListener(addr))
+            .await
+            .map_err(CoreError::from)?;
+        Ok(())
+    }
+
+    pub(crate) async fn connect(&self, addr: SocketAddr) -> ClientResult<()> {
+        self.net_command_channel()
+            .send(NetworkCommand::Connect(addr))
+            .await
+            .map_err(CoreError::from)?;
+        Ok(())
+    }
+
+    pub(crate) async fn disconnect(&self, addr: SocketAddr) -> ClientResult<()> {
+        self.net_command_channel()
+            .send(NetworkCommand::Disconnect(addr))
+            .await
+            .map_err(CoreError::from)?;
+        Ok(())
+    }
+
+    pub(crate) async fn set_identity(&mut self, iden: Option<UserIdentity>) -> ClientResult<()> {
+        self.user_identity = iden.clone();
+        self.net_command_channel()
+            .send(NetworkCommand::SetIdentity(iden.clone()))
+            .await
+            .map_err(CoreError::from)?;
+        self.ui_event_channel()
+            .send(UiEvent::IdentitySet(self.user_identity.clone()))
+            .await?;
+        Ok(())
+    }
+
+    pub(crate) async fn send_message(
+        &self,
+        to: VerifyingKey,
+        msg: SharedMessage,
+    ) -> ClientResult<()> {
+        let data: Arc<Vec<u8>> = Arc::new(msg.to_wire());
+        let remote = match self.open_connections.get(&to) {
+            Some(r) => r,
+            None => {
+                return Err(ClientError::NoConnection(to));
+            }
+        };
+        self.send_net_cmd(NetworkCommand::SendMessage(*remote, to, data))
+            .await;
+        self.send_ui_evt(UiEvent::MessageSent(*remote, to, msg))
+            .await;
+        Ok(())
+    }
+
+    pub(crate) async fn load_chat(&self, key: VerifyingKey) -> ClientResult<()> {
+        if self.chats.contains_key(&key) {
+            self.send_ui_evt(UiEvent::ChatLoaded(self.chats.get(&key).unwrap().clone()))
+                .await;
+        } else {
+            self.send_ui_evt(UiEvent::ChatNotFound(key)).await;
         }
         Ok(())
     }

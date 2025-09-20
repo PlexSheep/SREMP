@@ -1,8 +1,8 @@
-use std::{fmt::Display, net::SocketAddr, sync::Arc};
+use std::{collections::HashMap, fmt::Display, net::SocketAddr, sync::Arc};
 
 use ed25519_dalek::VerifyingKey;
 use sremp_core::{
-    chat::messages::SharedMessage,
+    chat::{Chat, messages::SharedMessage},
     identity::{UserIdentity, format_key},
 };
 
@@ -18,6 +18,9 @@ pub enum UiEvent {
     ListenerStarted(SocketAddr),
     ListenerStopped,
     IdentitySet(Option<UserIdentity>),
+    LoadInitialChats(HashMap<VerifyingKey, Chat>),
+    ChatLoaded(Chat),
+    ChatNotFound(VerifyingKey),
 }
 
 impl Display for UiEvent {
@@ -52,6 +55,13 @@ impl Display for UiEvent {
                         "working copy of user identity was set to nothing".to_string()
                     }
                 }
+                Self::ChatLoaded(chat) => format!(
+                    "Chat with '{}' was loaded",
+                    chat.contact().identity.username()
+                ),
+                Self::LoadInitialChats(chats) => format!("Loaded {} chats", chats.len()),
+                Self::ChatNotFound(key) =>
+                    format!("Chat with key {} does not exist", format_key(key)),
             }
         )
     }

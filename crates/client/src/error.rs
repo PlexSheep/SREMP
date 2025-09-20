@@ -1,5 +1,6 @@
 use async_channel::SendError;
-use sremp_core::error::CoreError;
+use ed25519_dalek::VerifyingKey;
+use sremp_core::{error::CoreError, identity::format_key};
 use thiserror::Error;
 
 use crate::domain::{UiCommand, UiEvent};
@@ -14,6 +15,8 @@ pub enum ClientError {
     ChannelSendUiCmd(Box<async_channel::SendError<UiCommand>>),
     #[error(transparent)]
     CoreError(CoreError),
+    #[error("No connection exists to {}. Can't send message to them!", format_key(.0))]
+    NoConnection(VerifyingKey),
 }
 
 impl From<CoreError> for ClientError {

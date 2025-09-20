@@ -58,6 +58,7 @@ impl UiDomain {
 
     #[inline]
     pub(crate) fn send_cmd(&self, cmd: UiCommand) {
+        log::info!("Sending ui command: {cmd}");
         self.command_channel
             .send_blocking(cmd)
             .expect("could not send Ui Command")

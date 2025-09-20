@@ -10,6 +10,8 @@ use chrono::{DateTime, Utc};
 use ed25519_dalek::VerifyingKey;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
+use crate::error::CoreResult;
+
 pub type MessageID = u32;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -92,8 +94,19 @@ impl Message {
         }
     }
 
+    #[inline]
     pub fn meta(&self) -> &MessageMeta {
         &self.meta
+    }
+
+    #[inline]
+    pub fn from_wire(&self, raw: &[u8]) -> CoreResult<Self> {
+        Ok(rmp_serde::from_slice(raw)?)
+    }
+
+    #[inline]
+    pub fn to_wire(&self) -> Vec<u8> {
+        rmp_serde::to_vec(self).expect("could not serialize Message")
     }
 }
 

@@ -13,7 +13,7 @@ pub enum NetworkCommand {
     /// Associated [SocketAddr] is the local addres on which to listen, not a remote address
     StartListener(SocketAddr),
     StopListener,
-    SetIdentity(UserIdentity),
+    SetIdentity(Option<UserIdentity>),
 }
 
 impl Display for NetworkCommand {
@@ -25,16 +25,20 @@ impl Display for NetworkCommand {
                 Self::Connect(addr) => format!("Connect to {addr}"),
                 Self::Disconnect(addr) => format!("Disconnect from {addr}"),
                 Self::SendMessage(addr, id, _msg) =>
-                    format!("Send Message to {addr}: {}", format_key(&id)),
+                    format!("Send Message to {addr}: {}", format_key(id)),
                 Self::StartListener(addr) =>
                     format!("Start listening for incoming connection on {addr}"),
                 Self::StopListener => "Stop listening for incoming connections".to_string(),
                 Self::SetIdentity(id) => {
-                    format!(
-                        "Set working copy of user identity to {} ({})",
-                        format_key(&id.identity.public_key),
-                        id.identity.username()
-                    )
+                    if let Some(id) = id {
+                        format!(
+                            "Set working copy of user identity to {} ({})",
+                            format_key(&id.identity.public_key),
+                            id.identity.username()
+                        )
+                    } else {
+                        "Set working copy of user identity to <None>".to_string()
+                    }
                 }
             }
         )
