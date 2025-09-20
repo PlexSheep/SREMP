@@ -14,6 +14,27 @@ project.
 Also, since I'm a night person, I will count sessions continuing into the next
 day as part of the previous one. It's just more convenient that way.
 
+## 2025-09-20 (plexsheep)
+
+### Progress
+
+- I'm currently reworking the gtk crate for the 3 domain architecture. Which
+  isn't too easy, since I need to change a lot of code.
+- After the 3 domain refactor, the application loads up again
+- After all this work... Now i have a deadlock again. In the client crate.
+
+### Decisions
+
+- the error variants of async_channel send errors were rather large, so they are
+  now stored as boxes in `CoreError` and `ClientError`.
+
+### Notes
+
+### Mood
+
+- A bit sleepy, but had a good day
+- Frustrated about deadlocks
+
 ## 2025-09-19 (plexsheep)
 
 ### Progress
