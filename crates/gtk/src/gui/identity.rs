@@ -1,11 +1,11 @@
 use gtk::prelude::*;
 use sremp_core::identity::{ContactIdentity, UserIdentity, format_key};
 
-use crate::{domain::UiDomainSync, gui::label, utils::GUI_SPACING_MID};
+use crate::{GUI_SPACING_MID, domain::UiDomainSync, gui::label};
 
 /// Creates and shows a dialog for creating a new user identity
 pub(crate) fn dialog_create_identity(app: &gtk::Application, state: UiDomainSync) {
-    if state.borrow().core().user_identity.is_some() {
+    if state.borrow().user_identity().is_some() {
         // TODO: don't allow creating a new identity when one already exists #8
         log::warn!("Creating a new identity even if you already have one");
     }
@@ -124,19 +124,11 @@ pub(crate) fn dialog_create_identity(app: &gtk::Application, state: UiDomainSync
         // Try to create the identity
         match UserIdentity::build(&username) {
             Ok(user_identity) => {
-                // Store the identity in the app state
                 {
-                    let state_ref = state_clone.borrow_mut();
-                    state_ref.core_mut().user_identity = Some(user_identity.clone());
+                    state_clone
+                        .borrow_mut()
+                        .set_user_identity(Some(user_identity.clone()));
                 }
-
-                log::info!(
-                    "Created new user identity for username '{username}': {}",
-                    format_key(&user_identity.identity.public_key)
-                );
-
-                // Show success dialog
-                show_identity_created_success(&win_dialog_clone, user_identity);
 
                 win_dialog_clone.close();
             }
@@ -155,7 +147,7 @@ pub(crate) fn dialog_create_identity(app: &gtk::Application, state: UiDomainSync
 }
 
 /// Shows a success dialog after identity creation
-fn show_identity_created_success(parent: &gtk::Window, user_identity: UserIdentity) {
+pub(crate) fn show_identity_created_success(user_identity: UserIdentity) {
     let w_box = gtk::Box::builder()
         .orientation(gtk::Orientation::Vertical)
         .spacing(GUI_SPACING_MID)
@@ -192,11 +184,6 @@ fn show_identity_created_success(parent: &gtk::Window, user_identity: UserIdenti
 
     win_dialog.show();
     log::debug!("Showing identity created success window");
-}
-
-/// Checks if the current app state has a user identity
-pub(crate) fn has_user_identity(state: &UiDomainSync) -> bool {
-    state.borrow().core().user_identity.is_some()
 }
 
 pub(crate) fn show_user_identity(app: &gtk::Application, user: UserIdentity) {

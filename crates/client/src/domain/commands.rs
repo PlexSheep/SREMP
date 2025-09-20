@@ -9,7 +9,7 @@ use sremp_core::{
 #[derive(Debug, Clone)]
 #[allow(clippy::large_enum_variant)]
 pub enum UiCommand {
-    SetIdentity(UserIdentity),
+    SetIdentity(Option<UserIdentity>),
     SendMessage(VerifyingKey, SharedMessage),
     StartListener(SocketAddr),
     StopListener,
@@ -31,11 +31,15 @@ impl Display for UiCommand {
                     format!("Start listening for incoming connection on {addr}"),
                 Self::StopListener => "Stop listening for incoming connections".to_string(),
                 Self::SetIdentity(id) => {
-                    format!(
-                        "Set working copy of user identity to {} ({})",
-                        format_key(&id.identity.public_key),
-                        id.identity.username()
-                    )
+                    if let Some(id) = id {
+                        format!(
+                            "Set working copy of user identity to {} ({})",
+                            format_key(&id.identity.public_key),
+                            id.identity.username()
+                        )
+                    } else {
+                        "Set working copy of user identity to <None>".to_string()
+                    }
                 }
                 Self::LoadChat(id) => format!("Load chat for contact {}, id any", format_key(id)),
             }

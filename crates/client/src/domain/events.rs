@@ -1,9 +1,13 @@
 use std::{fmt::Display, net::SocketAddr, sync::Arc};
 
 use ed25519_dalek::VerifyingKey;
-use sremp_core::{chat::messages::SharedMessage, identity::format_key};
+use sremp_core::{
+    chat::messages::SharedMessage,
+    identity::{UserIdentity, format_key},
+};
 
 #[derive(Debug, Clone)]
+#[allow(clippy::large_enum_variant)]
 pub enum UiEvent {
     ConnectionEstablished(SocketAddr, VerifyingKey),
     ConnectionLost(SocketAddr, VerifyingKey),
@@ -13,6 +17,7 @@ pub enum UiEvent {
     ConnectionFailed(SocketAddr, String),
     ListenerStarted(SocketAddr),
     ListenerStopped,
+    IdentitySet(Option<UserIdentity>),
 }
 
 impl Display for UiEvent {
@@ -36,6 +41,17 @@ impl Display for UiEvent {
                 Self::ListenerStopped => "Listener for incoming connection was stopped".to_string(),
                 Self::ConnectionReset(addr) =>
                     format!("Bad connection awards from {addr} was aborted",),
+                Self::IdentitySet(id) => {
+                    if let Some(id) = id {
+                        format!(
+                            "working copy of user identity was set to {} ({})",
+                            format_key(&id.identity.public_key),
+                            id.identity.username()
+                        )
+                    } else {
+                        "working copy of user identity was set to nothing".to_string()
+                    }
+                }
             }
         )
     }

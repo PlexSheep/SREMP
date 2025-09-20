@@ -30,7 +30,7 @@ impl MessageBubble {
             .orientation(gtk::Orientation::Horizontal)
             .build();
 
-        let author = match todo!() {
+        let author = match state.borrow().find_contact(&self.inner.meta().author_key) {
             Some(a) => a,
             None => panic!("unknwon author: {:?}", self.meta().author_key.to_bytes()),
         };
@@ -69,7 +69,11 @@ impl MessageBubble {
             .build()
     }
 
-    fn widget_content(&self, app: &gtk::Application, state: UiDomainSync) -> impl IsA<gtk::Widget> {
+    fn widget_content(
+        &self,
+        _app: &gtk::Application,
+        _state: UiDomainSync,
+    ) -> impl IsA<gtk::Widget> {
         gtk::Label::new(Some(&self.inner.text))
     }
 }
@@ -88,6 +92,14 @@ impl From<SharedMessage> for MessageBubble {
     }
 }
 
+impl From<&SharedMessage> for MessageBubble {
+    fn from(value: &SharedMessage) -> Self {
+        MessageBubble {
+            inner: value.clone(),
+        }
+    }
+}
+
 pub(crate) fn widget_viewport_chat(
     app: &gtk::Application,
     state: UiDomainSync,
@@ -103,24 +115,17 @@ pub(crate) fn widget_viewport_chat(
         .show_separators(false)
         .build();
 
-    let dbg_contact = ContactIdentity::debug_contact();
-
-    state
-        .borrow()
-        .core_mut()
-        .known_identities
-        .insert(dbg_contact.identity.public_key, dbg_contact.clone());
-    for number in (0..=100).rev() {
-        let msg: SharedMessage = Message::new(
-            format!("foo bar {number} years ago"),
-            chrono::Utc::now(),
-            dbg_contact.identity.public_key,
-        )
-        .into();
-        let bubble: MessageBubble = msg.into();
-        w_list_box.append(&bubble.widget(app, state.clone()));
+    match state.borrow().current_chat() {
+        Some(c) => {
+            for message in c.messages() {
+                let message_bubble = MessageBubble::from(message);
+                w_list_box.append(&message_bubble.widget(app, state.clone()));
+            }
+        }
+        None => {
+            w_list_box.append(&label("No chat selected"));
+        }
     }
-    // TODO: automatically load the end
 
     let w_chat_interface = gtk::ScrolledWindow::builder()
         .hscrollbar_policy(gtk::PolicyType::Never) // Disable horizontal scrolling
@@ -212,25 +217,8 @@ fn widget_input_area(app: &gtk::Application, state: UiDomainSync) -> impl IsA<gt
     w_btn_send.connect_clicked(move |_| {
         let text = tb.text(&tb.start_iter(), &tb.end_iter(), false);
         if !text.trim().is_empty() {
-            // FIXME: i need to program actual chats
-            let chat = state
-                .borrow()
-                .selected_chat()
-                .expect("no chat is selected?");
-            let msg = Message::new(text, Utc::now(), chat.contact().identity.public_key);
-            state
-                .borrow()
-                .command_channel
-                .send_blocking(NetworkCommand::SendMessage(
-                    state
-                        .borrow()
-                        .core()
-                        .find_socket_addr_for_chat(&chat)
-                        .expect("chat has no open connection"),
-                    chat.contact().clone(),
-                    msg,
-                ))
-                .expect("could push send message command");
+            // let msg = Message::new(text, Utc::now(), chat.contact().identity.public_key);
+            log::warn!("Sending messages is not yet implemented");
             tb.set_text("");
         }
     });

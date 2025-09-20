@@ -36,7 +36,8 @@ pub(crate) fn widget_topbar(_app: &gtk::Application, state: UiDomainSync) -> imp
         Some(actions::ids::A_ID_SETTINGS_DELETE_CHATS!(app)),
     );
 
-    menu_info_versions.append(Some(&crate::utils::version()), Some("void"));
+    menu_info_versions.append(Some(&crate::version()), Some("void"));
+    menu_info_versions.append(Some(&sremp_client::version()), Some("void"));
     menu_info_versions.append(Some(&sremp_core::version()), Some("void"));
     menu_info_versions.append(
         Some(&format!(

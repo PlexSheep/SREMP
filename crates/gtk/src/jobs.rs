@@ -27,6 +27,9 @@ async fn event_processor(state: UiDomainSync) {
                     UiEvent::ListenerStopped => {
                         update_listener_label(&state.borrow());
                     }
+                    UiEvent::IdentitySet(iden) => {
+                        state.borrow_mut().apply_user_identity(iden);
+                    }
                     other => {
                         log::warn!("Received unimplemented Ui event: {other}")
                     }

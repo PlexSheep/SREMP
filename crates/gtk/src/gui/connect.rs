@@ -1,7 +1,6 @@
-use crate::{domain::UiDomainSync, gui::label, utils::GUI_SPACING_MID};
+use crate::{GUI_SPACING_MID, domain::UiDomainSync, gui::label};
 
 use gtk::prelude::*;
-use sremp_core::net::NetworkCommand;
 
 pub(crate) fn dialog_connect(app: &gtk::Application, state: UiDomainSync) {
     let win_dialog = gtk::Window::builder()
@@ -86,15 +85,8 @@ pub(crate) fn dialog_connect(app: &gtk::Application, state: UiDomainSync) {
 
         match format!("{raw_host}:{raw_port}").parse::<std::net::SocketAddr>() {
             Ok(remote) => {
-                let state = state.borrow();
-                if let Err(e) = state
-                    .command_channel
-                    .send_blocking(NetworkCommand::Connect(remote))
-                {
-                    handle_error(format!("Could not connect to remove: {e}"))
-                } else {
-                    win_dialog_clone.close();
-                }
+                state.borrow().initiate_connection(remote);
+                win_dialog_clone.close();
             }
             Err(e) => handle_error(format!("Could not parse remote address: {e}")),
         }

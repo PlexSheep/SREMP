@@ -3,7 +3,7 @@ use sremp_core::chat::Chat;
 
 use crate::domain::UiDomainSync;
 use crate::gui::label;
-use crate::utils::{GUI_SPACING_LARGE, GUI_SPACING_MID};
+use crate::{GUI_SPACING_LARGE, GUI_SPACING_MID};
 
 pub(crate) fn widget_chats_list(
     app: &gtk::Application,
@@ -13,7 +13,10 @@ pub(crate) fn widget_chats_list(
         .selection_mode(gtk::SelectionMode::None)
         .build();
 
-    if state.borrow().core().chats.is_empty() {
+    let chats = &state.borrow().chats;
+
+    if chats.is_empty() {
+        drop(chats);
         let w_box = gtk::Box::builder()
             .orientation(gtk::Orientation::Vertical)
             .margin_top(GUI_SPACING_LARGE)
@@ -34,11 +37,12 @@ pub(crate) fn widget_chats_list(
                 .build(),
         );
     } else {
-        for chat in state.borrow().core().chats.clone().values() {
+        for chat in chats {
             let w_chat_card = widget_chat_card(app, state.clone(), chat);
             w_list.append(&w_chat_card);
         }
     }
+    drop(chats);
 
     gtk::Frame::builder()
         .margin_top(GUI_SPACING_LARGE)

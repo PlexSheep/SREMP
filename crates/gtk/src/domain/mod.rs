@@ -4,17 +4,27 @@ use async_channel::{Receiver, Sender};
 use ed25519_dalek::VerifyingKey;
 
 use sremp_client::domain::{UiCommand, UiEvent};
-use sremp_core::{chat::Chat, error::CoreResult};
+use sremp_core::{
+    chat::Chat,
+    error::CoreResult,
+    identity::{UserIdentity, format_key},
+};
 
+pub(crate) mod find;
+pub(crate) mod listen;
 pub(crate) mod tracked_widgets;
 use tracked_widgets::TrackedWidgets;
+
+use crate::gui::identity::show_identity_created_success;
 
 #[derive(Debug)]
 pub(crate) struct UiDomain {
     pub(crate) command_channel: Sender<UiCommand>,
-    pub(crate) event_channel: Receiver<UiEvent>, // TODO: process the received events somehow
+    pub(crate) event_channel: Receiver<UiEvent>,
+    // actual ui stuff
     pub(crate) tracked_widgets: TrackedWidgets,
-    pub(crate) selected_chat: Option<VerifyingKey>,
+    pub(crate) chats: Vec<Chat>,
+    user_identity: Option<UserIdentity>,
 }
 
 #[derive(Debug, Clone)]
@@ -31,26 +41,51 @@ impl UiDomain {
         Self {
             command_channel,
             event_channel,
-            selected_chat: None,
+            chats: Vec::with_capacity(32),
             tracked_widgets: Default::default(),
+            user_identity: Default::default(),
         }
     }
-
-    pub(crate) fn set_selected_chat(&mut self, key: Option<VerifyingKey>) -> CoreResult<()> {
-        todo!()
-    }
-
-    pub(crate) fn selected_chat(&self) -> Option<Chat> {
-        todo!()
-    }
-
     #[must_use]
     #[inline]
     pub(crate) fn into_sync(self) -> UiDomainSync {
         UiDomainSync::new(self)
     }
 
-    pub(crate) fn fmt_listen_status(&self) -> String {
+    #[inline]
+    pub(crate) fn send_cmd(&self, cmd: UiCommand) {
+        self.command_channel
+            .send_blocking(cmd)
+            .expect("could not send Ui Command")
+    }
+
+    #[inline]
+    pub(crate) fn user_identity(&self) -> Option<&UserIdentity> {
+        self.user_identity.as_ref()
+    }
+
+    #[inline]
+    pub(crate) fn set_user_identity(&mut self, iden: Option<UserIdentity>) {
+        // we actually set the user identity working copy for the ui domain if the application
+        // domain emits the event that tells us to do so
+        self.send_cmd(UiCommand::SetIdentity(iden));
+    }
+
+    pub(crate) fn apply_user_identity(&mut self, iden: Option<UserIdentity>) {
+        self.user_identity = iden.clone();
+
+        if let Some(iden) = iden {
+            log::info!(
+                "Created new user identity for username '{}': {}",
+                iden.identity.username(),
+                format_key(&iden.identity.public_key)
+            );
+
+            show_identity_created_success(iden);
+        }
+    }
+
+    pub(crate) fn current_chat(&self) -> Option<Chat> {
         todo!()
     }
 }

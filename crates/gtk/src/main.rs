@@ -8,8 +8,6 @@ use crate::actions::register_actions;
 use crate::domain::UiDomain;
 use crate::gui::start_application;
 
-/// maximum of 10 messages queues, otherwise crash
-const CHANNEL_CAPACITY: usize = 10;
 pub(crate) const GUI_SPACING_MID: i32 = 8;
 pub(crate) const GUI_SPACING_LARGE: i32 = 12;
 pub(crate) const GUI_SPACING_XLARGE: i32 = 16;
