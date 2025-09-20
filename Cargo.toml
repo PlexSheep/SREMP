@@ -36,3 +36,16 @@ members = [
     "crates/gtk",
     "crates/client",
 ]
+
+# i dont use a debugger most of the time, so generating debug symbols is 
+# a waste of time
+[profile.dev]
+debug = false
+
+# add some options to reduce binary size and improve runtime speed at the cost 
+# of additional compile time
+[profile.release]
+debug = false
+codegen-units = 1
+strip = "debuginfo"
+lto = "fat"
