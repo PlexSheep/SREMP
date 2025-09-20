@@ -1,5 +1,6 @@
 use std::net::SocketAddr;
 
+use async_channel::SendError;
 use thiserror::Error;
 
 use crate::domain::{NetworkCommand, NetworkEvent};
@@ -11,13 +12,11 @@ pub enum CoreError {
     #[error("standard io error: {0}")]
     IO(#[from] std::io::Error),
     #[error("Could not load the application store")]
-    Load(#[from] LoadError),
-    #[error("Could not load the application store")]
     ChannelRecv(#[from] async_channel::RecvError),
     #[error("Could send a network event to the over the local async channel")]
-    ChannelSendNetEvent(#[from] async_channel::SendError<NetworkEvent>),
+    ChannelSendNetEvent(Box<async_channel::SendError<NetworkEvent>>),
     #[error("Could send a network command to the over the local async channel")]
-    ChannelSendNetCmd(#[from] async_channel::SendError<NetworkCommand>),
+    ChannelSendNetCmd(Box<async_channel::SendError<NetworkCommand>>),
     #[error("Noise protocol error: {0}")]
     Noise(#[from] snow::Error),
     #[error("MessagePack encode error: {0}")]
@@ -45,9 +44,14 @@ pub enum CoreError {
     #[error("The given username does not conform to the constraints of the specification")]
     InvalidUsername,
 }
+impl From<SendError<NetworkCommand>> for CoreError {
+    fn from(value: SendError<NetworkCommand>) -> Self {
+        Self::ChannelSendNetCmd(Box::new(value))
+    }
+}
 
-#[derive(Debug, Error)]
-pub enum LoadError {
-    #[error("could not load")]
-    Placeholder,
+impl From<SendError<NetworkEvent>> for CoreError {
+    fn from(value: SendError<NetworkEvent>) -> Self {
+        Self::ChannelSendNetEvent(Box::new(value))
+    }
 }

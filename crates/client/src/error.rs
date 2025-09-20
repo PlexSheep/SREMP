@@ -1,3 +1,4 @@
+use async_channel::SendError;
 use sremp_core::error::CoreError;
 use thiserror::Error;
 
@@ -8,9 +9,9 @@ pub type ClientResult<T> = std::result::Result<T, ClientError>;
 #[derive(Debug, Error)]
 pub enum ClientError {
     #[error("Could send a ui event to the over the local async channel")]
-    ChannelSendUiEvent(#[from] async_channel::SendError<UiEvent>),
+    ChannelSendUiEvent(Box<async_channel::SendError<UiEvent>>),
     #[error("Could send a ui command to the over the local async channel")]
-    ChannelSendUiCmd(#[from] async_channel::SendError<UiCommand>),
+    ChannelSendUiCmd(Box<async_channel::SendError<UiCommand>>),
     #[error(transparent)]
     CoreError(CoreError),
 }
@@ -18,5 +19,17 @@ pub enum ClientError {
 impl From<CoreError> for ClientError {
     fn from(value: CoreError) -> Self {
         Self::CoreError(value)
+    }
+}
+
+impl From<SendError<UiCommand>> for ClientError {
+    fn from(value: SendError<UiCommand>) -> Self {
+        ClientError::ChannelSendUiCmd(Box::new(value))
+    }
+}
+
+impl From<SendError<UiEvent>> for ClientError {
+    fn from(value: SendError<UiEvent>) -> Self {
+        ClientError::ChannelSendUiEvent(Box::new(value))
     }
 }
