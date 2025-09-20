@@ -1,4 +1,4 @@
-use std::{cell::RefCell, ops::Deref, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, ops::Deref, rc::Rc};
 
 use async_channel::{Receiver, Sender};
 use ed25519_dalek::VerifyingKey;
@@ -15,16 +15,18 @@ pub(crate) mod listen;
 pub(crate) mod tracked_widgets;
 use tracked_widgets::TrackedWidgets;
 
-use crate::gui::identity::show_identity_created_success;
+use crate::{domain::listen::ListenerStatus, gui::identity::show_identity_created_success};
 
 #[derive(Debug)]
 pub(crate) struct UiDomain {
     pub(crate) command_channel: Sender<UiCommand>,
     pub(crate) event_channel: Receiver<UiEvent>,
+    listen_status: ListenerStatus,
     // actual ui stuff
     pub(crate) tracked_widgets: TrackedWidgets,
-    pub(crate) chats: Vec<Chat>,
+    chats: HashMap<VerifyingKey, Chat>,
     user_identity: Option<UserIdentity>,
+    selected_chat: Option<VerifyingKey>,
 }
 
 #[derive(Debug, Clone)]
@@ -41,9 +43,11 @@ impl UiDomain {
         Self {
             command_channel,
             event_channel,
-            chats: Vec::with_capacity(32),
+            chats: HashMap::with_capacity(32),
             tracked_widgets: Default::default(),
             user_identity: Default::default(),
+            selected_chat: Default::default(),
+            listen_status: Default::default(),
         }
     }
     #[must_use]
@@ -85,8 +89,22 @@ impl UiDomain {
         }
     }
 
-    pub(crate) fn current_chat(&self) -> Option<Chat> {
-        todo!()
+    pub(crate) fn chats(&self) -> &HashMap<VerifyingKey, Chat> {
+        &self.chats
+    }
+
+    pub(crate) fn set_current_chat(&mut self, key: Option<VerifyingKey>) {
+        if let Some(key) = key {
+            if self.chats.contains_key(&key) {
+                self.selected_chat = Some(key);
+            }
+        } else {
+            log::warn!("Selected a chat that does not exist")
+        }
+    }
+
+    pub(crate) fn current_chat(&self) -> Option<&Chat> {
+        self.chats.get(self.selected_chat.as_ref()?)
     }
 }
 

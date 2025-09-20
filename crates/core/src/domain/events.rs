@@ -2,9 +2,9 @@ use std::{fmt::Display, net::SocketAddr, sync::Arc};
 
 use ed25519_dalek::VerifyingKey;
 
-use crate::identity::format_key;
+use crate::{error::CoreError, identity::format_key};
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum NetworkEvent {
     ConnectionEstablished(SocketAddr, VerifyingKey),
     ConnectionLost(SocketAddr, VerifyingKey),
@@ -13,6 +13,7 @@ pub enum NetworkEvent {
     ConnectionReset(SocketAddr),
     ConnectionFailed(SocketAddr, String),
     ListenerStarted(SocketAddr),
+    ListenerFailed(CoreError),
     ListenerStopped,
 }
 
@@ -37,6 +38,7 @@ impl Display for NetworkEvent {
                 Self::ListenerStopped => "Listener for incoming connection was stopped".to_string(),
                 Self::ConnectionReset(addr) =>
                     format!("Bad connection awards from {addr} was aborted",),
+                Self::ListenerFailed(err) => format!("Listener failed: {err}"),
             }
         )
     }

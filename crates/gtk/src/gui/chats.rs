@@ -13,36 +13,37 @@ pub(crate) fn widget_chats_list(
         .selection_mode(gtk::SelectionMode::None)
         .build();
 
-    let chats = &state.borrow().chats;
+    {
+        let state_bind = state.borrow();
+        let chats = state_bind.chats();
 
-    if chats.is_empty() {
-        drop(chats);
-        let w_box = gtk::Box::builder()
-            .orientation(gtk::Orientation::Vertical)
-            .margin_top(GUI_SPACING_LARGE)
-            .margin_bottom(GUI_SPACING_LARGE)
-            .margin_start(GUI_SPACING_LARGE)
-            .margin_end(GUI_SPACING_LARGE)
-            .build();
+        if chats.is_empty() {
+            let w_box = gtk::Box::builder()
+                .orientation(gtk::Orientation::Vertical)
+                .margin_top(GUI_SPACING_LARGE)
+                .margin_bottom(GUI_SPACING_LARGE)
+                .margin_start(GUI_SPACING_LARGE)
+                .margin_end(GUI_SPACING_LARGE)
+                .build();
 
-        w_box.append(&label("No chats yet"));
+            w_box.append(&label("No chats yet"));
 
-        w_list.append(
-            &gtk::Frame::builder()
-                .margin_top(GUI_SPACING_MID)
-                .margin_bottom(GUI_SPACING_MID)
-                .margin_start(GUI_SPACING_MID)
-                .margin_end(GUI_SPACING_MID)
-                .child(&w_box)
-                .build(),
-        );
-    } else {
-        for chat in chats {
-            let w_chat_card = widget_chat_card(app, state.clone(), chat);
-            w_list.append(&w_chat_card);
+            w_list.append(
+                &gtk::Frame::builder()
+                    .margin_top(GUI_SPACING_MID)
+                    .margin_bottom(GUI_SPACING_MID)
+                    .margin_start(GUI_SPACING_MID)
+                    .margin_end(GUI_SPACING_MID)
+                    .child(&w_box)
+                    .build(),
+            );
+        } else {
+            for chat in chats.values() {
+                let w_chat_card = widget_chat_card(app, state.clone(), chat);
+                w_list.append(&w_chat_card);
+            }
         }
     }
-    drop(chats);
 
     gtk::Frame::builder()
         .margin_top(GUI_SPACING_LARGE)

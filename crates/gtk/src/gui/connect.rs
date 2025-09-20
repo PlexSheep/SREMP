@@ -85,7 +85,7 @@ pub(crate) fn dialog_connect(app: &gtk::Application, state: UiDomainSync) {
 
         match format!("{raw_host}:{raw_port}").parse::<std::net::SocketAddr>() {
             Ok(remote) => {
-                state.borrow().initiate_connection(remote);
+                state.borrow_mut().initiate_connection(remote);
                 win_dialog_clone.close();
             }
             Err(e) => handle_error(format!("Could not parse remote address: {e}")),
