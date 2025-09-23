@@ -1,7 +1,11 @@
-use std::sync::Arc;
+use std::{net::SocketAddr, sync::Arc};
 
 use async_channel::{Receiver, Sender};
-use tokio::{net::TcpListener, sync::RwLock, task::JoinHandle};
+use tokio::{
+    net::{TcpListener, TcpStream},
+    sync::RwLock,
+    task::JoinHandle,
+};
 
 mod active_connections;
 mod commands;
@@ -34,11 +38,12 @@ impl NetworkDomain {
         Arc::new(RwLock::new(self))
     }
 
-    async fn get_listener_or_wait(&self) -> &TcpListener {
-        match &self.listener {
-            Some(l) => l,
+    async fn listener_accept_or_wait(&self) -> CoreResult<(TcpStream, SocketAddr)> {
+        let incoming = match &self.listener {
+            Some(l) => l.accept().await?,
             None => std::future::pending().await,
-        }
+        };
+        Ok(incoming)
     }
 
     async fn run(
@@ -49,19 +54,14 @@ impl NetworkDomain {
         log::trace!("{}", current_function!());
         let ssy = self.into_sync();
         loop {
-            log::trace!("net Workload");
             let this = ssy.read().await;
-            log::trace!("net Workload got this");
-            // BUG: This select never finishes, not even with sleep timeout
             tokio::select! {
                 cmd = command_channel.recv() => {
-                    log::trace!("net workload command");
                     drop(this);
                     let event = ssy.write().await.process_network_command(cmd?).await?;
                     event_channel.send(event).await?;
                 },
-                incoming = this.get_listener_or_wait().await.accept() => {
-                    log::trace!("net workload incoming");
+                incoming = this.listener_accept_or_wait() => {
                     drop(this);
                     let (stream, remote) = incoming?;
                     let ssyc = ssy.clone();
@@ -71,10 +71,9 @@ impl NetworkDomain {
                     });
                 }
                 _ = tokio::time::sleep(tokio::time::Duration::from_millis(JOB_ITERATION_INTERVAL_MS)) => {
-                    log::trace!("net Workload timed out");
-                    continue;
+                    // nothing
                 }
-            }
+            };
         }
     }
 
