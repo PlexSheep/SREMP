@@ -10,6 +10,7 @@ use crate::{
     current_function,
     domain::{ConnectionData, NetworkCommand, NetworkDomain, NetworkDomainSync, NetworkEvent},
     error::{CoreError, CoreResult},
+    identity::UserIdentity,
     net::connection::Connection,
 };
 
@@ -69,13 +70,16 @@ impl NetworkDomain {
         ))
     }
 
-    async fn connect_to(&mut self, remote: SocketAddr) -> CoreResult<NetworkEvent> {
-        log::trace!("{}", current_function!());
-        let user_identity = self
-            .user_identity
+    fn identity(&self) -> CoreResult<&UserIdentity> {
+        self.user_identity
             .as_ref()
             .ok_or(CoreError::NoUserIdentity)
-            .inspect_err(|e| log::error!("Can't connect without identity: {e}"))?;
+            .inspect_err(|e| log::error!("Can't connect without identity: {e}"))
+    }
+
+    async fn connect_to(&mut self, remote: SocketAddr) -> CoreResult<NetworkEvent> {
+        log::trace!("{}", current_function!());
+        let user_identity = self.identity()?;
         let connection = Connection::connect_to(remote, user_identity).await?;
         self.init_connection(remote, connection).await
     }
@@ -86,11 +90,7 @@ impl NetworkDomain {
         remote: SocketAddr,
     ) -> CoreResult<NetworkEvent> {
         log::trace!("{}", current_function!());
-        let user_identity = self
-            .user_identity
-            .as_ref()
-            .ok_or(CoreError::NoUserIdentity)
-            .inspect_err(|e| log::error!("Can't connect without identity: {e}"))?;
+        let user_identity = self.identity()?;
         let connection = Connection::connect_from(stream, remote, user_identity).await?;
         self.init_connection(remote, connection).await
     }

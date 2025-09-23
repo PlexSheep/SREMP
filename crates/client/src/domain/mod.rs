@@ -141,10 +141,10 @@ impl ClientDomain {
     }
 
     #[inline]
-    pub(crate) async fn send_ui_evt(&self, cmd: UiEvent) {
-        log::info!("Emitting ui event: {cmd}");
+    pub(crate) async fn send_ui_evt(&self, evt: UiEvent) {
+        log::info!("Emitting ui event: {evt}");
         self.ui_event_channel()
-            .send(cmd)
+            .send(evt)
             .await
             .expect("could not send ui event");
     }

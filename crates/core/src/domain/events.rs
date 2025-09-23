@@ -8,7 +8,7 @@ use crate::{error::CoreError, identity::format_key};
 pub enum NetworkEvent {
     ConnectionEstablished(SocketAddr, VerifyingKey),
     ConnectionLost(SocketAddr, VerifyingKey),
-    IncomingMessage(SocketAddr, VerifyingKey, Vec<u8>),
+    IncomingMessage(SocketAddr, VerifyingKey, Arc<Vec<u8>>),
     MessageSent(SocketAddr, VerifyingKey, Arc<Vec<u8>>),
     ConnectionReset(SocketAddr),
     ConnectionFailed(SocketAddr, String),

@@ -5,7 +5,7 @@ use sremp_core::{
     chat::messages::SharedMessage,
     current_function,
     domain::{NetworkCommand, NetworkEvent},
-    error::CoreError,
+    error::{CoreError, CoreResult},
     identity::UserIdentity,
 };
 
@@ -33,7 +33,31 @@ impl ClientDomain {
         log::trace!("{}", current_function!());
         log::info!("Processing Net Event: {event}");
         match event {
-            _ => todo!(),
+            NetworkEvent::ListenerStopped => self.send_ui_evt(UiEvent::ListenerStopped).await,
+            NetworkEvent::ListenerFailed(core_error) => todo!(),
+            NetworkEvent::ListenerStarted(addr) => {
+                self.send_ui_evt(UiEvent::ListenerStarted(addr)).await
+            }
+            NetworkEvent::ConnectionLost(remote, key) => {
+                self.send_ui_evt(UiEvent::ConnectionLost(remote, key)).await
+            }
+            NetworkEvent::ConnectionFailed(remote, reason) => {
+                self.send_ui_evt(UiEvent::ConnectionFailed(remote, reason))
+                    .await
+            }
+            NetworkEvent::ConnectionEstablished(remote, reason) => {
+                self.send_ui_evt(UiEvent::ConnectionEstablished(remote, reason))
+                    .await
+            }
+            NetworkEvent::MessageSent(remote, key, data) => {
+                todo!()
+            }
+            NetworkEvent::IncomingMessage(remote, key, data) => {
+                self.incoming_message(remote, key, data).await?
+            }
+            NetworkEvent::ConnectionReset(remote) => {
+                self.send_ui_evt(UiEvent::ConnectionReset(remote)).await
+            }
         }
         Ok(())
     }
@@ -116,5 +140,14 @@ impl ClientDomain {
             self.send_ui_evt(UiEvent::ChatNotFound(key)).await;
         }
         Ok(())
+    }
+
+    pub(crate) async fn incoming_message(
+        &self,
+        remote: SocketAddr,
+        key: VerifyingKey,
+        data: Arc<Vec<u8>>,
+    ) -> CoreResult<()> {
+        todo!()
     }
 }
