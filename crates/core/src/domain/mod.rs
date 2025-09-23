@@ -67,7 +67,7 @@ impl NetworkDomain {
                     let ssyc = ssy.clone();
                     let evtc = event_channel.clone();
                     tokio::spawn(async move {
-                        Self::handle_incoming_connection(ssyc,stream,remote, evtc).await
+                        Self::handle_incoming_connection(ssyc, stream, remote, evtc).await
                     });
                 }
                 _ = tokio::time::sleep(tokio::time::Duration::from_millis(JOB_ITERATION_INTERVAL_MS)) => {
