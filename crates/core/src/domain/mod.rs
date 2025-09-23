@@ -12,7 +12,7 @@ pub(crate) use active_connections::*;
 pub use commands::NetworkCommand;
 pub use events::NetworkEvent;
 
-use crate::{error::CoreResult, identity::UserIdentity};
+use crate::{current_function, error::CoreResult, identity::UserIdentity};
 
 pub type NetworkDomainSync = Arc<tokio::sync::RwLock<NetworkDomain>>;
 
@@ -46,16 +46,22 @@ impl NetworkDomain {
         command_channel: Receiver<NetworkCommand>,
         event_channel: Sender<NetworkEvent>,
     ) -> CoreResult<()> {
+        log::trace!("{}", current_function!());
         let ssy = self.into_sync();
         loop {
+            log::trace!("net Workload");
             let this = ssy.read().await;
+            log::trace!("net Workload got this");
+            // BUG: This select never finishes, not even with sleep timeout
             tokio::select! {
                 cmd = command_channel.recv() => {
+                    log::trace!("net workload command");
                     drop(this);
                     let event = ssy.write().await.process_network_command(cmd?).await?;
                     event_channel.send(event).await?;
                 },
                 incoming = this.get_listener_or_wait().await.accept() => {
+                    log::trace!("net workload incoming");
                     drop(this);
                     let (stream, remote) = incoming?;
                     let ssyc = ssy.clone();
@@ -65,6 +71,7 @@ impl NetworkDomain {
                     });
                 }
                 _ = tokio::time::sleep(tokio::time::Duration::from_millis(JOB_ITERATION_INTERVAL_MS)) => {
+                    log::trace!("net Workload timed out");
                     continue;
                 }
             }

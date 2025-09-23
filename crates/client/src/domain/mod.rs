@@ -13,6 +13,7 @@ pub use commands::UiCommand;
 pub use events::UiEvent;
 use sremp_core::{
     chat::Chat,
+    current_function,
     domain::{NetworkCommand, NetworkEvent},
     error::CoreError,
     identity::UserIdentity,
@@ -57,10 +58,10 @@ impl ClientDomain {
     async fn run(self) -> ClientResult<()> {
         let ssy = self.into_sync();
         loop {
-            log::trace!("Client workload");
             let this = ssy.read().await;
             tokio::select! {
                 cmd = this.ui_command_channel().recv() => {
+                    drop(this);
                     let cmd = cmd.map_err(CoreError::from)?;
                     ssy.write().await.process_ui_command(
                         cmd,
@@ -75,7 +76,7 @@ impl ClientDomain {
                     // WARN: not sure, but this might kill the execution of other branches?
                     continue;
                 }
-            }
+            };
         }
     }
 

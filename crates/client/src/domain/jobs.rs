@@ -3,6 +3,7 @@ use std::{net::SocketAddr, sync::Arc};
 use ed25519_dalek::VerifyingKey;
 use sremp_core::{
     chat::messages::SharedMessage,
+    current_function,
     domain::{NetworkCommand, NetworkEvent},
     error::CoreError,
     identity::UserIdentity,
@@ -15,6 +16,7 @@ use crate::{
 
 impl ClientDomain {
     pub(super) async fn process_ui_command(&mut self, command: UiCommand) -> ClientResult<()> {
+        log::trace!("{}", current_function!());
         log::info!("Processing Ui Command: {command}");
         match command {
             UiCommand::StopListener => self.listener_stop().await,
@@ -28,6 +30,7 @@ impl ClientDomain {
     }
 
     pub(super) async fn process_net_event(&mut self, event: NetworkEvent) -> ClientResult<()> {
+        log::trace!("{}", current_function!());
         log::info!("Processing Net Event: {event}");
         match event {
             _ => todo!(),
@@ -36,6 +39,7 @@ impl ClientDomain {
     }
 
     pub(crate) async fn listener_stop(&self) -> ClientResult<()> {
+        log::trace!("{}", current_function!());
         self.net_command_channel()
             .send(NetworkCommand::StopListener)
             .await
@@ -44,6 +48,7 @@ impl ClientDomain {
     }
 
     pub(crate) async fn listener_start(&self, addr: SocketAddr) -> ClientResult<()> {
+        log::trace!("{}", current_function!());
         self.net_command_channel()
             .send(NetworkCommand::StartListener(addr))
             .await
@@ -52,6 +57,7 @@ impl ClientDomain {
     }
 
     pub(crate) async fn connect(&self, addr: SocketAddr) -> ClientResult<()> {
+        log::trace!("{}", current_function!());
         self.net_command_channel()
             .send(NetworkCommand::Connect(addr))
             .await
@@ -60,6 +66,7 @@ impl ClientDomain {
     }
 
     pub(crate) async fn disconnect(&self, addr: SocketAddr) -> ClientResult<()> {
+        log::trace!("{}", current_function!());
         self.net_command_channel()
             .send(NetworkCommand::Disconnect(addr))
             .await
@@ -68,6 +75,7 @@ impl ClientDomain {
     }
 
     pub(crate) async fn set_identity(&mut self, iden: Option<UserIdentity>) -> ClientResult<()> {
+        log::trace!("{}", current_function!());
         self.user_identity = iden.clone();
         self.net_command_channel()
             .send(NetworkCommand::SetIdentity(iden.clone()))
@@ -84,6 +92,7 @@ impl ClientDomain {
         to: VerifyingKey,
         msg: SharedMessage,
     ) -> ClientResult<()> {
+        log::trace!("{}", current_function!());
         let data: Arc<Vec<u8>> = Arc::new(msg.to_wire());
         let remote = match self.open_connections.get(&to) {
             Some(r) => r,
@@ -99,6 +108,7 @@ impl ClientDomain {
     }
 
     pub(crate) async fn load_chat(&self, key: VerifyingKey) -> ClientResult<()> {
+        log::trace!("{}", current_function!());
         if self.chats.contains_key(&key) {
             self.send_ui_evt(UiEvent::ChatLoaded(self.chats.get(&key).unwrap().clone()))
                 .await;

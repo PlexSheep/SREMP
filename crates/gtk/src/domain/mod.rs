@@ -61,7 +61,8 @@ impl UiDomain {
         log::info!("Sending ui command: {cmd}");
         self.command_channel
             .send_blocking(cmd)
-            .expect("could not send Ui Command")
+            .expect("could not send Ui Command");
+        log::trace!("ui command sent");
     }
 
     #[inline]

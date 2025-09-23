@@ -7,6 +7,7 @@ use tokio::{
 };
 
 use crate::{
+    current_function,
     domain::{ConnectionData, NetworkCommand, NetworkDomain, NetworkDomainSync, NetworkEvent},
     error::{CoreError, CoreResult},
     net::connection::Connection,
@@ -17,6 +18,7 @@ impl NetworkDomain {
         &mut self,
         command: NetworkCommand,
     ) -> CoreResult<NetworkEvent> {
+        log::trace!("{}", current_function!());
         log::info!("Processing Network Command: {command}");
         let event = match command {
             NetworkCommand::Connect(remote) => self.connect_to(remote).await?,
@@ -41,6 +43,7 @@ impl NetworkDomain {
         remote: SocketAddr,
         connection: Connection,
     ) -> CoreResult<NetworkEvent> {
+        log::trace!("{}", current_function!());
         log::debug!("Initializing TLS connection for {remote}");
         let remote_identity = connection.peer_identity().await.clone();
 
@@ -67,6 +70,7 @@ impl NetworkDomain {
     }
 
     async fn connect_to(&mut self, remote: SocketAddr) -> CoreResult<NetworkEvent> {
+        log::trace!("{}", current_function!());
         let user_identity = self
             .user_identity
             .as_ref()
@@ -81,6 +85,7 @@ impl NetworkDomain {
         stream: net::TcpStream,
         remote: SocketAddr,
     ) -> CoreResult<NetworkEvent> {
+        log::trace!("{}", current_function!());
         let user_identity = self
             .user_identity
             .as_ref()
@@ -91,6 +96,7 @@ impl NetworkDomain {
     }
 
     async fn listen(&mut self, listen_addr: SocketAddr) -> CoreResult<NetworkEvent> {
+        log::trace!("{}", current_function!());
         if self.listener.is_some() {
             log::error!("tried to start listening, but a listener already exists!");
             panic!()
@@ -109,6 +115,7 @@ impl NetworkDomain {
         remote: SocketAddr,
         event_channel: Sender<NetworkEvent>,
     ) -> CoreResult<()> {
+        log::trace!("{}", current_function!());
         log::info!("Handling incoming connection from {remote}");
         let event = state.write().await.connect_from(stream, remote).await?;
         event_channel.send(event).await?;
