@@ -14,6 +14,21 @@ project.
 Also, since I'm a night person, I will count sessions continuing into the next
 day as part of the previous one. It's just more convenient that way.
 
+## 2025-09-23 (plexsheep)
+
+### Progress
+
+- I found out why the main loop of the core crate deadlocks
+- Worked on processing the network events in the application domain and the ui domain
+
+### Decisions
+
+### Notes
+
+### Mood
+
+- Had a good day. Coding is fun
+
 ## 2025-09-20 (plexsheep)
 
 ### Progress
