@@ -5,8 +5,9 @@
 
 use log::trace;
 use sremp_client::domain::UiEvent;
+use sremp_core::current_function;
 
-use crate::domain::UiDomainSync;
+use crate::domain::{UiDomain, UiDomainSync};
 
 use gtk::glib;
 
@@ -41,8 +42,8 @@ async fn event_processor(state: UiDomainSync) {
     }
 }
 
-fn update_listener_label(state: &std::cell::Ref<'_, crate::domain::UiDomain>) {
-    trace!("updating listener label");
+pub(crate) fn update_listener_label(state: &std::sync::RwLockReadGuard<'_, UiDomain>) {
+    log::trace!("{}", current_function!());
     let new_text = state.fmt_listen_status();
     state
         .tracked_widgets

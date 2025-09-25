@@ -1,6 +1,7 @@
 use std::{fmt::Display, net::SocketAddr};
 
 use sremp_client::{domain::UiCommand, error::ClientError};
+use sremp_core::current_function;
 
 use crate::domain::UiDomain;
 
@@ -20,7 +21,9 @@ impl UiDomain {
         self.listen_status = ListenerStatus::Starting;
     }
     pub(crate) fn fmt_listen_status(&self) -> String {
-        self.listen_status.to_string()
+        let s = self.listen_status.to_string();
+        log::trace!("{} -> {s:?}", current_function!());
+        s
     }
 }
 

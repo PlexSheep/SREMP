@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::HashMap, ops::Deref, rc::Rc};
+use std::{collections::HashMap, ops::Deref, rc::Rc, sync::RwLock};
 
 use async_channel::{Receiver, Sender};
 use ed25519_dalek::VerifyingKey;
@@ -31,7 +31,7 @@ pub(crate) struct UiDomain {
 
 #[derive(Debug, Clone)]
 pub(crate) struct UiDomainSync {
-    inner: Rc<RefCell<UiDomain>>,
+    inner: Rc<RwLock<UiDomain>>,
 }
 
 impl UiDomain {
@@ -115,13 +115,25 @@ impl UiDomainSync {
     #[inline]
     pub(crate) fn new(state: UiDomain) -> Self {
         Self {
-            inner: Rc::new(RefCell::new(state)),
+            inner: Rc::new(RwLock::new(state)),
         }
+    }
+
+    #[must_use]
+    #[inline]
+    pub(crate) fn borrow(&self) -> std::sync::RwLockReadGuard<'_, UiDomain> {
+        self.read().expect("could not read UiDomain state")
+    }
+
+    #[must_use]
+    #[inline]
+    pub(crate) fn borrow_mut(&self) -> std::sync::RwLockWriteGuard<'_, UiDomain> {
+        self.write().expect("could not read UiDomain state")
     }
 }
 
 impl Deref for UiDomainSync {
-    type Target = Rc<RefCell<UiDomain>>;
+    type Target = Rc<RwLock<UiDomain>>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner

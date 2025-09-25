@@ -1,4 +1,4 @@
-use crate::{GUI_SPACING_MID, domain::UiDomainSync, gui::label};
+use crate::{GUI_SPACING_MID, domain::UiDomainSync, gui::label, jobs::update_listener_label};
 
 use gtk::prelude::*;
 
@@ -86,6 +86,8 @@ pub(crate) fn dialog_connect(app: &gtk::Application, state: UiDomainSync) {
         match format!("{raw_host}:{raw_port}").parse::<std::net::SocketAddr>() {
             Ok(remote) => {
                 state.borrow_mut().initiate_connection(remote);
+                debug_assert!(!state.borrow().fmt_listen_status().contains("not active"));
+                update_listener_label(&state.borrow());
                 win_dialog_clone.close();
             }
             Err(e) => handle_error(format!("Could not parse remote address: {e}")),
