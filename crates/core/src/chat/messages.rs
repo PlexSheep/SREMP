@@ -123,7 +123,7 @@ impl Deref for SharedMessage {
     type Target = Message;
 
     fn deref(&self) -> &Self::Target {
-        &*self.inner
+        &self.inner
     }
 }
 

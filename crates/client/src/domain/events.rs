@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt::Display, net::SocketAddr, sync::Arc};
+use std::{collections::HashMap, fmt::Display, net::SocketAddr};
 
 use ed25519_dalek::VerifyingKey;
 use sremp_core::{

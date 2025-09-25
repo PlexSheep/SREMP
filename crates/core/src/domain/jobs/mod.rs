@@ -1,6 +1,5 @@
 use std::{collections::hash_map::Entry, net::SocketAddr};
 
-use async_channel::{Receiver, Sender};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net,

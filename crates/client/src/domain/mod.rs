@@ -13,7 +13,6 @@ pub use commands::UiCommand;
 pub use events::UiEvent;
 use sremp_core::{
     chat::Chat,
-    current_function,
     domain::{NetworkCommand, NetworkEvent},
     error::CoreError,
     identity::UserIdentity,

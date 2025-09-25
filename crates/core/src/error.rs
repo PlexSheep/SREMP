@@ -1,13 +1,9 @@
 use std::net::SocketAddr;
 
 use async_channel::SendError;
-use ed25519_dalek::VerifyingKey;
 use thiserror::Error;
 
-use crate::{
-    domain::{NetworkCommand, NetworkEvent},
-    identity::format_key,
-};
+use crate::domain::{NetworkCommand, NetworkEvent};
 
 pub type CoreResult<T> = std::result::Result<T, CoreError>;
 
