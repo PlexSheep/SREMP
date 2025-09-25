@@ -14,6 +14,22 @@ project.
 Also, since I'm a night person, I will count sessions continuing into the next
 day as part of the previous one. It's just more convenient that way.
 
+## 2025-09-25 (plexsheep)
+
+### Progress
+
+- I think the identity gets passed down the domains now
+- Found another deadlock in the gtk crate, but I don't yet know how to fix it
+
+### Decisions
+
+### Notes
+
+### Mood
+
+- Watching some videos nearby, have a lot of free time right now which is cool
+- Writing gui code is cond of tedious, but I guess I need a proper gui
+
 ## 2025-09-23 (plexsheep)
 
 ### Progress
