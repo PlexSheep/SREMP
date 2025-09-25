@@ -7,7 +7,10 @@ use log::trace;
 use sremp_client::domain::UiEvent;
 use sremp_core::current_function;
 
-use crate::domain::{UiDomain, UiDomainSync};
+use crate::{
+    domain::{UiDomain, UiDomainSync},
+    gui::identity::show_identity_created_success,
+};
 
 use gtk::glib;
 
@@ -29,7 +32,9 @@ async fn event_processor(state: UiDomainSync) {
                         update_listener_label(&state.borrow());
                     }
                     UiEvent::IdentitySet(iden) => {
-                        state.borrow_mut().apply_user_identity(iden);
+                        log::trace!("borrowing mutable ui domain state");
+                        // BUG: Deadlock here?
+                        state.borrow_mut().apply_user_identity(iden.clone());
                     }
                     other => {
                         log::warn!("Received unimplemented Ui event: {other}")

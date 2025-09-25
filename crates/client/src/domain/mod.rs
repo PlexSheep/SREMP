@@ -107,11 +107,6 @@ impl ClientDomain {
     }
 
     #[inline]
-    pub(crate) fn channels(&self) -> Channels {
-        self.channels_ref().clone()
-    }
-
-    #[inline]
     pub(crate) fn net_command_channel(&self) -> &Sender<NetworkCommand> {
         &self.channels_ref().net_command_channel
     }

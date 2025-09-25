@@ -86,7 +86,6 @@ impl UiDomain {
                 iden.identity.username(),
                 format_key(&iden.identity.public_key)
             );
-
             show_identity_created_success(iden);
         }
     }
@@ -119,13 +118,11 @@ impl UiDomainSync {
         }
     }
 
-    #[must_use]
     #[inline]
     pub(crate) fn borrow(&self) -> std::sync::RwLockReadGuard<'_, UiDomain> {
         self.read().expect("could not read UiDomain state")
     }
 
-    #[must_use]
     #[inline]
     pub(crate) fn borrow_mut(&self) -> std::sync::RwLockWriteGuard<'_, UiDomain> {
         self.write().expect("could not read UiDomain state")
