@@ -18,10 +18,10 @@ impl NetworkDomain {
     pub(super) async fn process_network_command(
         &mut self,
         command: NetworkCommand,
-    ) -> CoreResult<NetworkEvent> {
+    ) -> CoreResult<()> {
         log::trace!("{}", current_function!());
         log::info!("Processing Network Command: {command}");
-        let event = match command {
+        match command {
             NetworkCommand::Connect(remote) => self.connect_to(remote).await?,
             NetworkCommand::StartListener(listen_addr) => self.listen(listen_addr).await?,
             NetworkCommand::StopListener => {
@@ -31,19 +31,19 @@ impl NetworkDomain {
                 } else {
                     log::warn!("No listener currently exists!")
                 }
-                NetworkEvent::ListenerStopped
+                self.send_net_evt(NetworkEvent::ListenerStopped).await
             }
+            NetworkCommand::SetIdentity(iden) => self.user_identity = iden,
             _ => todo!(),
         };
-        log::info!("Event emerged after processing the Network Command: {event}");
-        Ok(event)
+        Ok(())
     }
 
     async fn init_connection(
         &mut self,
         remote: SocketAddr,
         connection: Connection,
-    ) -> CoreResult<NetworkEvent> {
+    ) -> CoreResult<()> {
         log::trace!("{}", current_function!());
         log::debug!("Initializing TLS connection for {remote}");
         let remote_identity = connection.peer_identity().await.clone();
@@ -53,10 +53,12 @@ impl NetworkDomain {
             Entry::Occupied(_en) => {
                 log::warn!("Duplicated connection, closing second connection...");
                 connection.disconnect().await?;
-                return Ok(NetworkEvent::ConnectionFailed(
+                self.send_net_evt(NetworkEvent::ConnectionFailed(
                     remote,
                     "already connected to this peer".to_string(),
-                ));
+                ))
+                .await;
+                return Ok(());
             }
             Entry::Vacant(en) => en.insert(ConnectionData {
                 conn: connection,
@@ -64,10 +66,12 @@ impl NetworkDomain {
             }),
         };
 
-        Ok(NetworkEvent::ConnectionEstablished(
+        self.send_net_evt(NetworkEvent::ConnectionEstablished(
             remote,
             remote_identity.public_key,
         ))
+        .await;
+        Ok(())
     }
 
     fn identity(&self) -> CoreResult<&UserIdentity> {
@@ -77,25 +81,21 @@ impl NetworkDomain {
             .inspect_err(|e| log::error!("Can't connect without identity: {e}"))
     }
 
-    async fn connect_to(&mut self, remote: SocketAddr) -> CoreResult<NetworkEvent> {
+    async fn connect_to(&mut self, remote: SocketAddr) -> CoreResult<()> {
         log::trace!("{}", current_function!());
         let user_identity = self.identity()?;
         let connection = Connection::connect_to(remote, user_identity).await?;
         self.init_connection(remote, connection).await
     }
 
-    async fn connect_from(
-        &mut self,
-        stream: net::TcpStream,
-        remote: SocketAddr,
-    ) -> CoreResult<NetworkEvent> {
+    async fn connect_from(&mut self, stream: net::TcpStream, remote: SocketAddr) -> CoreResult<()> {
         log::trace!("{}", current_function!());
         let user_identity = self.identity()?;
         let connection = Connection::connect_from(stream, remote, user_identity).await?;
         self.init_connection(remote, connection).await
     }
 
-    async fn listen(&mut self, listen_addr: SocketAddr) -> CoreResult<NetworkEvent> {
+    async fn listen(&mut self, listen_addr: SocketAddr) -> CoreResult<()> {
         log::trace!("{}", current_function!());
         if self.listener.is_some() {
             log::error!("tried to start listening, but a listener already exists!");
@@ -106,19 +106,19 @@ impl NetworkDomain {
 
         self.listener = Some(listener);
 
-        Ok(NetworkEvent::ListenerStarted(listen_addr))
+        self.send_net_evt(NetworkEvent::ListenerStarted(listen_addr))
+            .await;
+        Ok(())
     }
 
     pub(super) async fn handle_incoming_connection(
         state: NetworkDomainSync,
         stream: net::TcpStream,
         remote: SocketAddr,
-        event_channel: Sender<NetworkEvent>,
     ) -> CoreResult<()> {
         log::trace!("{}", current_function!());
         log::info!("Handling incoming connection from {remote}");
-        let event = state.write().await.connect_from(stream, remote).await?;
-        event_channel.send(event).await?;
+        state.write().await.connect_from(stream, remote).await?;
 
         Ok(())
     }
