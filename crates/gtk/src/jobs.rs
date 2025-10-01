@@ -47,7 +47,7 @@ async fn event_processor(state: UiDomainSync) {
     }
 }
 
-pub(crate) fn update_listener_label(state: &std::sync::RwLockReadGuard<'_, UiDomain>) {
+pub(crate) fn update_listener_label(state: &tokio::sync::RwLockReadGuard<'_, UiDomain>) {
     log::trace!("{}", current_function!());
     let new_text = state.fmt_listen_status();
     state

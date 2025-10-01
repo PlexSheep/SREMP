@@ -1,12 +1,12 @@
-use std::{collections::HashMap, ops::Deref, rc::Rc, sync::RwLock};
+use std::{collections::HashMap, ops::Deref, rc::Rc};
 
 use async_channel::{Receiver, Sender};
 use ed25519_dalek::VerifyingKey;
+use tokio::sync::RwLock;
 
 use sremp_client::domain::{UiCommand, UiEvent};
 use sremp_core::{
     chat::Chat,
-    error::CoreResult,
     identity::{UserIdentity, format_key},
 };
 
@@ -15,7 +15,9 @@ pub(crate) mod listen;
 pub(crate) mod tracked_widgets;
 use tracked_widgets::TrackedWidgets;
 
-use crate::{domain::listen::ListenerStatus, gui::identity::show_identity_created_success};
+use crate::{
+    RUNTIME, domain::listen::ListenerStatus, gui::identity::show_identity_created_success,
+};
 
 #[derive(Debug)]
 pub(crate) struct UiDomain {
@@ -119,13 +121,39 @@ impl UiDomainSync {
     }
 
     #[inline]
-    pub(crate) fn borrow(&self) -> std::sync::RwLockReadGuard<'_, UiDomain> {
-        self.read().expect("could not read UiDomain state")
+    pub(crate) fn borrow(&self) -> tokio::sync::RwLockReadGuard<'_, UiDomain> {
+        RUNTIME
+            .get()
+            .expect("could not use the tokio runtime in ui domain")
+            .block_on(async { self.read().await })
     }
 
-    #[inline]
-    pub(crate) fn borrow_mut(&self) -> std::sync::RwLockWriteGuard<'_, UiDomain> {
-        self.write().expect("could not read UiDomain state")
+    #[inline] // PERF: this has gotten pretty big with the deadlock detection
+    pub(crate) fn borrow_mut(&self) -> tokio::sync::RwLockWriteGuard<'_, UiDomain> {
+        let rt = RUNTIME
+            .get()
+            .expect("could not use the tokio runtime in ui domain");
+        rt.block_on(async {
+            let mut guard = 0;
+            const MAX_TRIES: u32 = 24;
+            loop {
+                match tokio::time::timeout(tokio::time::Duration::from_millis(100), async {
+                    self.write().await
+                })
+                .await
+                {
+                    Ok(lock) => return lock,
+                    Err(timeout) => {
+                        log::warn!("Could not acquire mutable lock of ui domain ({timeout}), trying again... ({guard} / {MAX_TRIES})");
+                        guard +=1;
+                        if guard > MAX_TRIES {
+                            panic!("Waited way too long for the mutable lock on the ui domain.")
+                        }
+                        continue;
+                    }
+                }
+            }
+        })
     }
 }
 
