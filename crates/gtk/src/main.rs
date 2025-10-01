@@ -1,3 +1,5 @@
+use std::sync::OnceLock;
+
 use async_channel::{Receiver, Sender};
 use gtk::prelude::*;
 use gtk::{Application, glib};
@@ -8,17 +10,19 @@ use crate::actions::register_actions;
 use crate::domain::UiDomain;
 use crate::gui::start_application;
 
+mod actions;
+mod domain;
+mod gui;
+mod jobs;
+
 pub(crate) const GUI_SPACING_MID: i32 = 8;
 pub(crate) const GUI_SPACING_LARGE: i32 = 12;
 pub(crate) const GUI_SPACING_XLARGE: i32 = 16;
 pub(crate) const GUI_SPACING_XXLARGE: i32 = 24;
 pub(crate) const GUI_SPACING_XXXLARGE: i32 = 32;
-pub const APP_ID: &str = "de.cscherr.sremp";
+pub const APP_ID: &str = "de.cscherr.sremp.gtk";
 
-mod actions;
-mod domain;
-mod gui;
-mod jobs;
+pub(crate) static RUNTIME: OnceLock<tokio::runtime::Runtime> = OnceLock::new();
 
 fn main() -> glib::ExitCode {
     env_logger::builder()
@@ -49,12 +53,17 @@ fn main() -> glib::ExitCode {
         )
         .expect("could not start application domain");
 
-    let ret = start_gui(ui_command_tx, ui_event_rx);
-    return ret;
+    start_gui(ui_command_tx, ui_event_rx, rt)
 }
 
-fn start_gui(command_tx: Sender<UiCommand>, event_rx: Receiver<UiEvent>) -> glib::ExitCode {
+fn start_gui(
+    command_tx: Sender<UiCommand>,
+    event_rx: Receiver<UiEvent>,
+    rt: tokio::runtime::Runtime,
+) -> glib::ExitCode {
     let app = Application::builder().application_id(APP_ID).build();
+
+    let _ = RUNTIME.get_or_init(|| rt); // store the runtime just in case it might be needed later
 
     app.connect_activate(move |app| {
         let domain = UiDomain::new(command_tx.clone(), event_rx.clone()).into_sync();
