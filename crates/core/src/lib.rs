@@ -8,6 +8,8 @@ pub mod error;
 pub mod identity;
 pub mod net;
 
+pub const PROTOCOL_DIRECT_NAME: &[u8; 12] = b"SREMP_DIRECT";
+
 pub fn version() -> String {
     format!("{} v{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"))
         .trim()
