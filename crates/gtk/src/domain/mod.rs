@@ -23,7 +23,7 @@ use crate::{
 pub(crate) struct UiDomain {
     pub(crate) command_channel: Sender<UiCommand>,
     pub(crate) event_channel: Receiver<UiEvent>,
-    listen_status: ListenerStatus,
+    pub(crate) listen_status: ListenerStatus,
     // actual UI stuff
     pub(crate) tracked_widgets: TrackedWidgets,
     chats: HashMap<VerifyingKey, Chat>,

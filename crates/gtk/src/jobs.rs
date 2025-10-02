@@ -8,7 +8,7 @@ use sremp_client::domain::UiEvent;
 use sremp_core::current_function;
 
 use crate::{
-    domain::{UiDomain, UiDomainSync},
+    domain::{UiDomain, UiDomainSync, listen::ListenerStatus},
     gui::identity::show_identity_created_success,
 };
 
@@ -31,7 +31,11 @@ async fn event_processor(state: UiDomainSync) {
                 log::info!("Processing network event: {event}");
 
                 match event {
-                    UiEvent::ListenerStarted(_addr) => {
+                    UiEvent::ListenerStarted(addr) => {
+                        state.borrow_mut().listen_status = ListenerStatus::Active(addr);
+                        log::trace!(
+                            "Listener was started, text should show that is is running on {addr}"
+                        );
                         update_listener_label(&state.borrow());
                     }
                     UiEvent::ListenerStopped => {

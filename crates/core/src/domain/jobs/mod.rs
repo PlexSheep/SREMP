@@ -97,8 +97,10 @@ impl NetworkDomain {
     async fn listen(&mut self, listen_addr: SocketAddr) -> CoreResult<()> {
         log::trace!("{}", current_function!());
         if self.listener.is_some() {
-            log::error!("tried to start listening, but a listener already exists!");
-            panic!()
+            let msg = "tried to start listening, but a listener already exists!";
+            log::error!("{msg}");
+            log::debug!("Listener: {:?}", self.listener);
+            panic!("{msg}")
         }
         let listener = net::TcpListener::bind(listen_addr).await?;
         let listen_addr = listener.local_addr()?;
