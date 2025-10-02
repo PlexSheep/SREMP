@@ -164,7 +164,7 @@ impl P2PConnection {
 
         let mut transport = noise.into_transport_mode()?;
 
-        // both send before receiving, then listen for the incoming identity response
+        // NOTE: both send before receiving, then listen for the incoming identity response
         // That way, the identity exchange is simultaneous and we dont need to program an order of
         // who sends first
 
@@ -176,11 +176,13 @@ impl P2PConnection {
         let frame = Frame::recv(stream).await?;
         len = transport.read_message(frame.data(), buf)?;
         let peer_identity: Identity = rmp_serde::from_slice(&buf[..len])?;
+        log::debug!("Received (unverified) Identity: {peer_identity:#?}");
 
         // FIXME: username might be a super long string, we should add some validator for the
         // username.
 
         if peer_identity.public_key != peer_public_key {
+            log::error!("identity key does not match noise static public key:");
             return Err(CoreError::PeerKeyIsInvalid {
                 remote,
                 source: ed25519_dalek::SignatureError::new(),
