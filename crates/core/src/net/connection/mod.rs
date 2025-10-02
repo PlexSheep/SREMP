@@ -82,7 +82,7 @@ impl P2PConnection {
 
             log::debug!("Sending Noise: `XX: --> e`");
             len = noise.write_message(&[], &mut buf)?;
-            Frame::raw(&buf[..len])?.send(tcp_stream).await?;
+            Frame::from_payload(&buf[..len])?.send(tcp_stream).await?;
 
             log::debug!("Receiving: `XX: <-- e, ee, s, es`");
             let frame = Frame::recv(tcp_stream).await?;
@@ -90,7 +90,7 @@ impl P2PConnection {
 
             log::debug!("Sending Noise: `XX: --> s, se`");
             len = noise.write_message(&[], &mut buf)?;
-            Frame::raw(&buf[..len])?.send(tcp_stream).await?;
+            Frame::from_payload(&buf[..len])?.send(tcp_stream).await?;
 
             log::debug!("Finished noise handshake");
 
@@ -124,7 +124,7 @@ impl P2PConnection {
 
             log::debug!("Sending Noise: `XX: <-- e, ee, s, es`");
             let len = noise.write_message(&[], &mut buf)?;
-            Frame::raw(&buf[..len])?.send(tcp_stream).await?;
+            Frame::from_payload(&buf[..len])?.send(tcp_stream).await?;
 
             log::debug!("Receiving: `XX: --> s, se`");
             frame = Frame::recv(tcp_stream).await?;
@@ -170,7 +170,7 @@ impl P2PConnection {
 
         log::debug!("Sending identity to peer");
         let mut len = transport.write_message(&rmp_serde::to_vec(&user.identity)?, buf)?;
-        Frame::raw(&buf[..len])?.send(stream).await?;
+        Frame::from_payload(&buf[..len])?.send(stream).await?;
 
         log::debug!("Receiving identity from peer");
         let frame = Frame::recv(stream).await?;
