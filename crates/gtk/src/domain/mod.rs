@@ -24,7 +24,7 @@ pub(crate) struct UiDomain {
     pub(crate) command_channel: Sender<UiCommand>,
     pub(crate) event_channel: Receiver<UiEvent>,
     listen_status: ListenerStatus,
-    // actual ui stuff
+    // actual UI stuff
     pub(crate) tracked_widgets: TrackedWidgets,
     chats: HashMap<VerifyingKey, Chat>,
     user_identity: Option<UserIdentity>,
@@ -74,7 +74,7 @@ impl UiDomain {
 
     #[inline]
     pub(crate) fn set_user_identity(&mut self, iden: Option<UserIdentity>) {
-        // we actually set the user identity working copy for the ui domain if the application
+        // we actually set the user identity working copy for the UI domain if the application
         // domain emits the event that tells us to do so
         self.send_cmd(UiCommand::SetIdentity(iden));
     }

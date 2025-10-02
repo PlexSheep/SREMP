@@ -21,7 +21,13 @@ pub(super) fn start_jobs(state: UiDomainSync) {
 async fn event_processor(state: UiDomainSync) {
     loop {
         {
-            if let Ok(event) = state.borrow().event_channel.try_recv() {
+            // WARN: explcit binding and dropping the binding is required here, otherwise the
+            // binding is held during the processing of the received event, even though the event
+            // is owned and not bound to the held lock on the ui domain.
+            // Holding the lock while processing the event may lead to deadlocks.
+            let state_b = state.borrow();
+            if let Ok(event) = state_b.event_channel.try_recv() {
+                drop(state_b);
                 log::info!("Processing network event: {event}");
 
                 match event {
@@ -33,7 +39,7 @@ async fn event_processor(state: UiDomainSync) {
                     }
                     UiEvent::IdentitySet(iden) => {
                         log::trace!("borrowing mutable ui domain state");
-                        // BUG: Deadlock here?
+                        // NOTE: Deadlock if the lock is still held above
                         state.borrow_mut().apply_user_identity(iden.clone());
                     }
                     other => {
@@ -43,7 +49,7 @@ async fn event_processor(state: UiDomainSync) {
             }
         }
 
-        glib::timeout_future(std::time::Duration::from_millis(50)).await;
+        glib::timeout_future(std::time::Duration::from_millis(20)).await;
     }
 }
 
