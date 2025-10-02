@@ -16,7 +16,7 @@ pub(crate) enum ListenerStatus {
 
 impl UiDomain {
     #[cold]
-    pub(crate) fn initiate_connection(&mut self, local_address: SocketAddr) {
+    pub(crate) fn initiate_listener(&mut self, local_address: SocketAddr) {
         self.send_cmd(UiCommand::StartListener(local_address));
         self.listen_status = ListenerStatus::Starting;
     }

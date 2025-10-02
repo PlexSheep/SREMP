@@ -10,6 +10,7 @@ use sremp_core::{
     identity::{UserIdentity, format_key},
 };
 
+pub(crate) mod connect;
 pub(crate) mod find;
 pub(crate) mod listen;
 pub(crate) mod tracked_widgets;
