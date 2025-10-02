@@ -124,7 +124,7 @@ Trust := Unknown | Trusted | Rejected
 Username := String(1..=40)
 ```
 
-The public key serves as the canonical identifier for routing purposes and cannot be changed without creating an entirely new identity. The username provides human-readable identification, and the version field enables future identity format evolution. Extensions allow future platform versions to include additional metadata such as profile pictures.
+The public key serves as the canonical identifier for routing purposes and cannot be changed without creating an entirely new identity. The username provides human-readable identification. Extensions allow us to include additional metadata such as profile pictures.
 
 A Username should be a UTF-8 String with 1 to 40 characters.
 
