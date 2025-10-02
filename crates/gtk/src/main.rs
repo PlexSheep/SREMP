@@ -1,6 +1,7 @@
 use std::sync::OnceLock;
 
 use async_channel::{Receiver, Sender};
+use gtk::gio::ApplicationFlags;
 use gtk::prelude::*;
 use gtk::{Application, glib};
 
@@ -62,6 +63,10 @@ fn start_gui(
     rt: tokio::runtime::Runtime,
 ) -> glib::ExitCode {
     let app = Application::builder().application_id(APP_ID).build();
+
+    // NOTE: We want to be able to run the application in two separate processes, so that we can
+    // test if they can really talk to eachother with networking. #19
+    app.set_flags(ApplicationFlags::NON_UNIQUE);
 
     let _ = RUNTIME.get_or_init(|| rt); // store the runtime just in case it might be needed later
 
