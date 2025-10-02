@@ -43,6 +43,8 @@ pub enum CoreError {
     },
     #[error("The given username does not conform to the constraints of the specification")]
     InvalidUsername,
+    #[error("Frame with a bad protocol name was received")]
+    BadProtocolName([u8; 12]),
 }
 impl From<SendError<NetworkCommand>> for CoreError {
     fn from(value: SendError<NetworkCommand>) -> Self {
