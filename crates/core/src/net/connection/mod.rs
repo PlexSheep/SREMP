@@ -4,6 +4,7 @@ use snow::{TransportState, params::NoiseParams};
 use tokio::{io::AsyncWriteExt, net};
 
 use crate::{
+    current_function,
     error::{CoreError, CoreResult},
     identity::{Identity, UserIdentity},
 };
@@ -44,6 +45,7 @@ impl Connection {
         remote: std::net::SocketAddr,
         user: &UserIdentity,
     ) -> CoreResult<Self> {
+        log::trace!("{}", current_function!());
         Ok(Self::P2P(P2PConnection::connect_to(remote, user).await?))
     }
 
@@ -68,7 +70,9 @@ impl Connection {
 
 impl P2PConnection {
     async fn connect_to(remote: std::net::SocketAddr, user: &UserIdentity) -> CoreResult<Self> {
+        log::trace!("{}", current_function!());
         let mut tcp_stream = net::TcpStream::connect(remote).await?;
+        log::debug!("Tcp Connection Established");
         let (peer_identity, transport) = Self::dead_switch(&mut tcp_stream, async |tcp_stream| {
             let mut noise = Self::noise_initiator(user)?;
             let mut buf = [0u8; MAX_FRAME_SIZE];
@@ -106,6 +110,7 @@ impl P2PConnection {
         remote: std::net::SocketAddr,
         user: &UserIdentity,
     ) -> CoreResult<Self> {
+        log::trace!("{}", current_function!());
         let (peer_identity, transport) = Self::dead_switch(&mut tcp_stream, async |tcp_stream| {
             let mut noise = Self::noise_responder(user)?;
             let mut buf = [0u8; MAX_FRAME_SIZE];

@@ -87,7 +87,7 @@ impl NetworkDomain {
             tokio::select! {
                 cmd = this.net_command_channel().recv() => {
                     drop(this);
-                    ssy.write().await.process_network_command(cmd?).await?;
+                    Self::process_network_command(ssy.clone(),cmd?).await?;
                 },
                 incoming = this.listener_accept_or_wait() => {
                     drop(this);
