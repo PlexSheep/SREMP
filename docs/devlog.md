@@ -31,6 +31,8 @@ day as part of the previous one. It's just more convenient that way.
 - After fixing #19, I got the first noise handshake between two separate
   processes running on my local machine :) The identity exchange worked
   partially: `Public key of peer (127.0.0.1:44961) is inval id: signature error`
+- Added the `VersionHeader` to the `Frame`, but i think it somehow fucked up the
+  length calculation or deserialization somewhere.
 
 ### Decisions
 
