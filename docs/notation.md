@@ -4,7 +4,7 @@
 
 # Notation
 
-This specification uses Rust- and ABNF-inspired pseudocode for structured data definitions. [^1]
+This specification uses Rust- and ABNF inspired pseudocode for structured data definitions[^1]. We call this notation Rust-like Abstract Notation (RlAN).
 
 ## 1 Definition Syntax
 
@@ -16,7 +16,7 @@ This specification uses Rust- and ABNF-inspired pseudocode for structured data d
 - `i8`, `i16`, `i32`, `i64`, `i128`: Signed integers of specified bit length
 - `String`: UTF-8 encoded text string
 
-### 1.2 Defined Datastructures
+### 1.2 Defined Data structures
 
 **Derived Type**
 
