@@ -224,6 +224,18 @@ Besides the noise static keys, each connection establishes fresh ephemeral keys 
 
 **Protocol Uncertainty**: The Noise message framing and any additional SREMP specific prologue data require detailed specification.
 
+#### 4.1.1 Identity Verification after Handshake
+
+After the and identity exchange, the identity of the peer must be verified
+according to section 3.1.4.
+
+After the identity of the peer is verified as specified, it must be verified
+that the static key for the noise handshake exactly matches the noise static
+key of the received and verified identity.
+
+The connection must be terminated if either verification fails. With this, we
+ensure that authenticated noise connections correspond to the claimed identity.
+
 ### 4.2 Rendezvous Communications
 
 Client connections to rendezvous servers use standard TLS 1.3 with server certificate validation. This choice introduces dependency on the traditional PKI system but simplifies deployment and debugging since rendezvous communications contain no secret data.
