@@ -73,8 +73,6 @@ EnumName := Variant1 | Variant2 | Variant3
 - `X25519PublicKey`: 32-byte X25519 public key
 - `X25519PrivateKey`: 32-byte X25519 private key
 - `X25519Signature`: 64-byte X25519 signature
-- `VerifyingKey`: Alias for Ed25519PublicKey
-- `SigningKey`: Alias for Ed25519PrivateKey
 
 ### 1.8 Protocol Types
 
