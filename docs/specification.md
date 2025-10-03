@@ -12,7 +12,7 @@ SREMP provides a messaging platform where users maintain control over their infr
 
 ### 1.1 Terminology
 
-This document uses a mix of ABNF-like (RFC 5234) notation and Rust-like Pseudocode for structured definitions. Platform messages are defined using a simplified notation where:
+This document uses a mix of ABNF like (RFC 5234) notation and Rust-like Pseudocode for structured definitions. Platform messages are defined using a simplified notation where:
 
 - `Name := { field: type, field: type }` defines structured data
 - `Name := VALUE1 | VALUE2` defines enumerated types
@@ -84,21 +84,33 @@ graph TB
 
 ### 3.1 Identity Structure
 
-Each SREMP participant possesses a cryptographic identity consisting of an Ed25519 key pair and associated metadata:
+Each SREMP participant possesses a cryptographic identity consisting of an
+Ed25519 key pair (that can never change), a noise key (that can rotate),
+associated metadata:
 
 ```
-Identity := {
+IdentityVerifiedData := {
     username: Username
-    public_key: Ed25519PublicKey,
+    identity_key: Ed25519PublicKey,
+    // this key must only be used as the static key for the noise protocol
+    noise_key: X25519PublicKey,
     flags: Flags,
     extensions: Optional<Extensions>
+    version: u64
+    created: DateTime<Utc>
+}
+
+Identity := {
+    verified: IdentityVerifiedData
+    // signature over the IdentityVerifiedData
+    signature: Ed25519Signature,
 }
 
 Flags := {
-    uses_relay: Boolean,
-    is_machine_account: Boolean,
-    is_relay_server: Boolean,
-    prefers_async: Boolean
+    uses_relay: bool,
+    is_machine_account: bool,
+    is_relay_server: bool,
+    prefers_async: bool
 }
 
 Extensions := {
@@ -106,10 +118,11 @@ Extensions := {
     additional_metadata: Optional<Map<String, List<u8>>>
 }
 
+// private identity, must never be transmitted or otherwise compromised
 UserIdentity := {
     identity: Identity,
-    private_key: Ed25519PrivateKey,
-    created: DateTime<Utc>
+    private_identity_key: Ed25519PrivateKey,
+    private_noise_key: X25519PrivateKey,
 }
 
 ContactIdentity {
@@ -124,7 +137,18 @@ Trust := Unknown | Trusted | Rejected
 Username := String(1..=40)
 ```
 
-The public key serves as the canonical identifier for routing purposes and cannot be changed without creating an entirely new identity. The username provides human-readable identification. Extensions allow us to include additional metadata such as profile pictures.
+The public key serves as the canonical identifier for routing purposes and cannot be changed without creating an entirely new identity. The username provides human-readable identification.
+
+Extensions and Flags allow us to include additional metadata such as profile pictures.
+
+The identity should also contain a signature with the identity key, so that
+identities are always verifiable to be related to the identity key.
+
+Each time the identity changes, the following actions must be taken:
+
+- the `version` field must be increased
+- the `created` field must be set to the current time
+- A new signature over the `IdentityVerifiedData` must be created
 
 A Username should be a UTF-8 String with 1 to 40 characters.
 
@@ -153,7 +177,7 @@ Noise_XX_25519_ChaChaPoly_Blake2s
 
 The Noise static keys correspond directly to SREMP Ed25519 identity keys, providing mutual authentication during handshake completion. Each connection establishes fresh ephemeral keys to ensure forward secrecy.
 
-**Protocol Uncertainty**: The Noise message framing and any additional SREMP-specific prologue data require detailed specification.
+**Protocol Uncertainty**: The Noise message framing and any additional SREMP specific prologue data require detailed specification.
 
 ### 4.2 Rendezvous Communications
 
@@ -206,8 +230,8 @@ REGISTER_REQUEST := {
 }
 
 REGISTER_RESPONSE := {
-    success: Boolean,
-    expires_at: Timestamp,
+    success: bool,
+    expires_at: DateTime<Utc>,
     renewal_interval: u32,
     error_message: Optional<String>
 }
@@ -222,7 +246,7 @@ Clients query rendezvous servers to discover specific peers or browse available 
 ```
 LOOKUP_REQUEST := {
     target_identity: Optional<Ed25519PublicKey>,
-    list_all: Boolean
+    list_all: bool
 }
 
 LOOKUP_RESPONSE := {
@@ -233,8 +257,8 @@ LOOKUP_RESPONSE := {
 PeerInfo := {
     identity: Identity,
     endpoint: DNSEndpoint,
-    last_seen: Timestamp,
-    online: Boolean
+    last_seen: DateTime<Utc>,
+    online: bool
 }
 
 DNSEndpoint := {
@@ -254,7 +278,7 @@ LIST_SERVERS_REQUEST := {}
 
 LIST_SERVERS_RESPONSE := {
     servers: List<SocketAddr>,
-    timestamp: Timestamp
+    timestamp: DateTime<Utc>
 }
 ```
 
@@ -286,6 +310,8 @@ RelayCapabilities := {
 Clients store encrypted messages for offline recipients and track delivery status through confirmation mechanisms:
 
 ```
+MessageId := u64
+
 STORE_MESSAGE := {
     recipient: Ed25519PublicKey,
     encrypted_blob: List<u8>,
@@ -294,33 +320,33 @@ STORE_MESSAGE := {
 }
 
 STORE_RESPONSE := {
-    success: Boolean,
-    stored_at: Timestamp,
+    success: bool,
+    stored_at: DateTime<Utc>,
     message_id: MessageId
 }
 
 RETRIEVE_MESSAGES := {
     identity: Ed25519PublicKey,
     auth_signature: Ed25519Signature,
-    since: Optional<Timestamp>
+    since: Optional<DateTime<Utc>>
 }
 
 MESSAGE_BATCH := {
     messages: List<StoredMessage>,
-    has_more: Boolean
+    has_more: bool
 }
 
 StoredMessage := {
     message_id: MessageId,
     sender: Ed25519PublicKey,
-    timestamp: Timestamp,
+    timestamp: DateTime<Utc>,
     encrypted_blob: List<u8>
 }
 
 DELIVERY_CONFIRMATION := {
     message_id: MessageId,
     delivered_to: Ed25519PublicKey,
-    timestamp: Timestamp,
+    timestamp: DateTime<Utc>,
     signature: Ed25519Signature
 }
 ```
@@ -353,7 +379,7 @@ Relay servers must track message delivery status and route confirmation messages
 
 Different communication paths provide varying levels of metadata protection:
 
-**Direct peer-to-peer connections** expose only network-level metadata to internet service providers and network operators. No third parties observe SREMP-specific metadata.
+**Direct peer-to-peer connections** expose only network-level metadata to internet service providers and network operators. No third parties observe SREMP specific metadata.
 
 **Relay-mediated connections** expose sender, recipient, timing, and message size information to relay operators. This metadata enables traffic analysis and social graph inference.
 
@@ -419,7 +445,7 @@ Many clients operate behind Network Address Translation (NAT) devices that preve
 
 ### 11.3 Bootstrap Discovery
 
-New clients require initial rendezvous server addresses to begin peer discovery. The platform should specify multiple bootstrap mechanisms including hardcoded addresses, DNS-based discovery, and manual configuration.
+New clients require initial rendezvous server addresses to begin peer discovery. The platform should specify multiple bootstrap mechanisms including hard-coded addresses, DNS-based discovery, and manual configuration.
 
 ## 12. Future Considerations
 
