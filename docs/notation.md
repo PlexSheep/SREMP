@@ -70,6 +70,9 @@ EnumName := Variant1 | Variant2 | Variant3
 - `Ed25519PublicKey`: 32-byte Ed25519 public key
 - `Ed25519PrivateKey`: 32-byte Ed25519 private key
 - `Ed25519Signature`: 64-byte Ed25519 signature
+- `X25519PublicKey`: 32-byte X25519 public key
+- `X25519PrivateKey`: 32-byte X25519 private key
+- `X25519Signature`: 64-byte X25519 signature
 - `VerifyingKey`: Alias for Ed25519PublicKey
 - `SigningKey`: Alias for Ed25519PrivateKey
 
