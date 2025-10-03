@@ -137,20 +137,32 @@ Trust := Unknown | Trusted | Rejected
 Username := String(1..=40)
 ```
 
-The public key serves as the canonical identifier for routing purposes and cannot be changed without creating an entirely new identity. The username provides human-readable identification.
+The public key serves as the canonical identifier for all purposes and cannot
+be changed without creating an entirely new identity.
+
+The username provides human-readable identification.
+It should be a UTF-8 String of 1 up to 40 characters.
 
 Extensions and Flags allow us to include additional metadata such as profile pictures.
 
-The identity should also contain a signature with the identity key, so that
-identities are always verifiable to be related to the identity key.
+For communication over the noise protocol, the identity also contains a X25519
+key pair, which is only used as the static key for the noise protocol and nothing
+else.
+
+For validation purposes, all fields that must be verifiable should be part of
+a sub structure `IdentityVerifiedData`. The `Identity` contains an Ed25519
+signature over the data of `IdentityVerifiedData`. The authenticity of this data
+must be verified whenever an identity is loaded.
+
+The `version` and `created` fields can be used as indicators to pick from
+multiple identities for the same public identity key, and for users manually
+check for consistency.
 
 Each time the identity changes, the following actions must be taken:
 
 - the `version` field must be increased
 - the `created` field must be set to the current time
 - A new signature over the `IdentityVerifiedData` must be created
-
-A Username should be a UTF-8 String with 1 to 40 characters.
 
 ### 3.2 Trust Model
 
