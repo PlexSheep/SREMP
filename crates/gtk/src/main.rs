@@ -26,10 +26,7 @@ pub const APP_ID: &str = "de.cscherr.sremp.gtk";
 pub(crate) static RUNTIME: OnceLock<tokio::runtime::Runtime> = OnceLock::new();
 
 fn main() -> glib::ExitCode {
-    env_logger::builder()
-        .filter_level(log::LevelFilter::Trace)
-        .parse_default_env()
-        .init();
+    setup_logging();
     let mut rt = tokio::runtime::Runtime::new().expect("could not create tokio runtime");
 
     let (net_command_tx, net_command_rx) = async_channel::unbounded();
@@ -86,4 +83,15 @@ pub fn version() -> String {
     format!("{} v{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"))
         .trim()
         .to_string()
+}
+
+fn setup_logging() {
+    let mut l = env_logger::builder();
+
+    #[cfg(debug_assertions)]
+    l.filter_level(log::LevelFilter::Trace);
+    #[cfg(not(debug_assertions))]
+    l.filter_level(log::LevelFilter::Info);
+
+    l.parse_default_env().init();
 }
