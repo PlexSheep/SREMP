@@ -118,7 +118,7 @@ Extensions := {
     additional_metadata: Optional<Map<String, List<u8>>>
 }
 
-// private identity, must never be transmitted or otherwise compromised
+// private identity, MUST NEVER be transmitted or otherwise exposed outside the client application
 UserIdentity := {
     identity: Identity,
     private_identity_key: Ed25519PrivateKey,
@@ -135,34 +135,65 @@ ContactIdentity {
 Trust := Unknown | Trusted | Rejected
 
 Username := String(1..=40)
+
+ContactId := Ed25519PublicKey
 ```
 
 The public key serves as the canonical identifier for all purposes and cannot
 be changed without creating an entirely new identity.
 
+#### 3.1.1 Username
+
 The username provides human-readable identification.
 It should be a UTF-8 String of 1 up to 40 characters.
 
+#### 3.1.2 Extensions and Flags
+
 Extensions and Flags allow us to include additional metadata such as profile pictures.
+
+#### 3.1.3 Noise key
 
 For communication over the noise protocol, the identity also contains a X25519
 key pair, which is only used as the static key for the noise protocol and nothing
 else.
 
+#### 3.1.4 Signature
+
 For validation purposes, all fields that must be verifiable should be part of
 a sub structure `IdentityVerifiedData`. The `Identity` contains an Ed25519
-signature over the data of `IdentityVerifiedData`. The authenticity of this data
-must be verified whenever an identity is loaded.
+signature over the data of `IdentityVerifiedData`.
+
+By this mechanism, the `noise_key` and other verified identity data is
+cryptographically bound to the `identity_key`. This prevents an attacker from
+substituting a different `noise_key` or other verified field while keeping the
+same `identity_key`.
+
+**Verification**
+
+Applications must verify the identity signature after deserializing before trusting any field in the
+`Identity` structure.
+
+#### 3.1.5 Version Management and Timestamp
 
 The `version` and `created` fields can be used as indicators to pick from
 multiple identities for the same public identity key, and for users manually
 check for consistency.
 
+The `version` field monotonically increases with each identity
+update. Applications should always prefer higher versions when multiple versions
+of an `Identity` exist for an `identity_key`.
+
 Each time the identity changes, the following actions must be taken:
 
-- the `version` field must be increased
+- the `version` field must be incremented by one
 - the `created` field must be set to the current time
 - A new signature over the `IdentityVerifiedData` must be created
+
+#### 3.1.6 Contact ID
+
+The public identity key serves as a unique identifier for a peer or contact. It
+can also be shown as a user. A fingerprint is not necessary, and the contact ID
+can never change.
 
 ### 3.2 Trust Model
 
@@ -187,7 +218,9 @@ All peer-to-peer communications use the Noise Protocol Framework with the XX han
 Noise_XX_25519_ChaChaPoly_Blake2s
 ```
 
-The Noise static keys correspond directly to SREMP Ed25519 identity keys, providing mutual authentication during handshake completion. Each connection establishes fresh ephemeral keys to ensure forward secrecy.
+The Noise static keys use the X25519 `noise_key` field from the SREMP identity. The Ed25519 `identity_key` is used for identity verification and application-layer signatures, and is never used in Noise protocol operations per Section 14 of the Noise specification. The `noise_key` is bound to the `identity_key` by the signature in the `Identity` structure.
+
+Besides the noise static keys, each connection establishes fresh ephemeral keys to ensure perfect forward secrecy.
 
 **Protocol Uncertainty**: The Noise message framing and any additional SREMP specific prologue data require detailed specification.
 

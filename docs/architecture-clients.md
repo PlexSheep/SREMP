@@ -112,7 +112,7 @@ Message := {
 }
 
 MessageMeta := {
-    author_key: VerifyingKey,
+    author_id: ContactId,
     time_received: DateTime<Utc>,
 }
 
