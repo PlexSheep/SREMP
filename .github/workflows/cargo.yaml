@@ -33,6 +33,10 @@ jobs:
       # Give the default GITHUB_TOKEN write permission to commit and push the
       # added or changed files to the repository.
       contents: write
+      # Prevent multiple clippy jobs from running simultaneously on the same branch
+    concurrency:
+      group: clippy-${{ github.ref }} # One job per branch
+      cancel-in-progress: true # abort instead of queueing
     name: Clippy
     runs-on: ubuntu-24.04
     steps:
@@ -61,6 +65,7 @@ jobs:
           commit_user_email: 41898282+github-actions[bot]@users.noreply.github.com
           commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> # defaults to "username <username@users.noreply.github.com>", where "username" belongs to the author of the commit that triggered the run
           commit_message: "ci: automatic Rust CI changes"
+          pull: "--rebase" # pull just in case
 
   docs:
     name: Docs
