@@ -130,8 +130,6 @@ impl P2PConnection {
             frame = Frame::recv(tcp_stream).await?;
             _ = noise.read_message(frame.data(), &mut buf)?;
 
-            log::debug!("Finished noise handshake");
-
             Self::post_handshake(&mut buf, tcp_stream, user, noise, remote).await
         })
         .await?;
@@ -163,6 +161,7 @@ impl P2PConnection {
             .map_err(|e| CoreError::PeerKeyIsInvalid { remote, source: e })?;
 
         let mut transport = noise.into_transport_mode()?;
+        log::debug!("Finished noise handshake");
 
         // NOTE: both send before receiving, then listen for the incoming identity response
         // That way, the identity exchange is simultaneous and we dont need to program an order of
