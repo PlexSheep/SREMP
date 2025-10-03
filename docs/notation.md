@@ -93,6 +93,17 @@ EnumName := Variant1 | Variant2 | Variant3
 - `1..40`: Range
 - `1..=40`: Inclusive range
 
+### 1.10 Comments
+
+This notation can contain comments. Comments are free text that can be used
+to further explain something. All text in a line following the marker `//`
+is a comment.
+
+```
+// This is a comment
+Trust := Unknown | Trusted | Rejected // this is also a comment
+```
+
 ## 2 Conventions
 
 ## 2.1 Naming
