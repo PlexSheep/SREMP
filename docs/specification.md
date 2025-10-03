@@ -88,7 +88,7 @@ Each SREMP participant possesses a cryptographic identity consisting of an Ed255
 
 ```
 Identity := {
-    username: String
+    username: Username
     public_key: Ed25519PublicKey,
     flags: Flags,
     extensions: Optional<Extensions>
