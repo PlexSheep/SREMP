@@ -14,6 +14,29 @@ project.
 Also, since I'm a night person, I will count sessions continuing into the next
 day as part of the previous one. It's just more convenient that way.
 
+## 2025-10-03 (plexsheep)
+
+### Progress
+
+- I think I fixed the clippy ci, which sometimes went boom when pushing automatic changes
+- The identity exchange fails because the specification is wrong: We try to
+  use an Ed25519 Key (identity key we called it so far) for the noise static
+  key, but that seems to be the wrong key type (need X25519 apperently?)
+- I made a lot of progress with the specification. The identity is now better
+  specified and should actually hold up in reality. The security is also
+  improved with cryptographic signatures over the identities.
+
+### Decisions
+
+- Needed to change identity specification because Ed25519 keys cannot be used as
+  static noise keys (without major hacks).
+
+### Notes
+
+### Mood
+
+- A bit tired
+
 ## 2025-10-02 (plexsheep)
 
 ### Progress
