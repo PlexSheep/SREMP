@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -25,8 +27,16 @@ impl ContactIdentity {
         })
     }
 
-    /// Sets the last-seen timestamp of this [`ContactIdentity`].
-    pub fn set_last_seen(&mut self, last_seen: DateTime<Utc>) {
-        self.last_seen = last_seen;
+    /// Sets the last-seen timestamp of this [`ContactIdentity`] to now.
+    pub fn seen(&mut self) {
+        self.last_seen = Utc::now();
+    }
+}
+
+impl Deref for ContactIdentity {
+    type Target = Identity;
+
+    fn deref(&self) -> &Self::Target {
+        &self.identity
     }
 }

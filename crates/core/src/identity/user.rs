@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -60,5 +62,13 @@ impl std::fmt::Debug for UserIdentity {
             .field("identity_key", &self.identity_key)
             .field("noise_key", &"{redacted}")
             .finish()
+    }
+}
+
+impl Deref for UserIdentity {
+    type Target = Identity;
+
+    fn deref(&self) -> &Self::Target {
+        &self.identity
     }
 }
