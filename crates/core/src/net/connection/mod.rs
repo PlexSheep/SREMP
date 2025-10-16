@@ -177,10 +177,12 @@ impl P2PConnection {
         let peer_identity: Identity = rmp_serde::from_slice(&buf[..len])?;
         log::debug!("Received (unverified) Identity: {peer_identity:#?}");
 
+        peer_identity.verify()?;
+
         // FIXME: username might be a super long string, we should add some validator for the
         // username.
 
-        if peer_identity.public_key != peer_public_key {
+        if peer_identity.identity_key() != peer_public_key {
             log::error!("identity key does not match noise static public key:");
             return Err(CoreError::PeerKeyIsInvalid {
                 remote,

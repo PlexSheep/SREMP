@@ -1,6 +1,7 @@
 use std::{
     collections::HashMap,
     fmt::{Debug, Display},
+    ops::Deref,
 };
 
 use chrono::{DateTime, Utc};
@@ -9,7 +10,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::CoreResult;
 
-pub type ContactId = ed25519_dalek::VerifyingKey;
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ContactId {
+    #[serde(flatten)]
+    pub key: ed25519_dalek::VerifyingKey,
+}
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum Trust {
@@ -107,10 +112,13 @@ impl Identity {
 
     #[inline]
     pub fn verify(&self) -> CoreResult<()> {
+        log::debug!("Verifying Identity {}.", self.id());
         self.verified
             .identity_key
             .verify_strict(self.verified.bytes()?.as_slice(), &self.signature)?;
+        log::debug!("Signature is valid");
         Self::validate_username(&self.verified.username)?;
+        log::debug!("Username is valid");
         Ok(())
     }
 
@@ -156,7 +164,7 @@ impl Identity {
 
     #[inline(always)]
     pub fn id(&self) -> ContactId {
-        self.identity_key()
+        self.identity_key().into()
     }
 
     #[inline(always)]
@@ -259,6 +267,13 @@ impl ContactIdentity {
     }
 }
 
+impl From<ed25519_dalek::VerifyingKey> for ContactId {
+    #[inline(always)]
+    fn from(value: ed25519_dalek::VerifyingKey) -> Self {
+        Self { key: value }
+    }
+}
+
 impl Display for Trust {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
@@ -270,6 +285,13 @@ impl Display for Trust {
                 Self::Rejected => "Rejected",
             }
         )
+    }
+}
+
+impl Display for ContactId {
+    #[inline]
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", format_key(&self.key))
     }
 }
 
@@ -306,6 +328,7 @@ fn generate_good_key_ed25519() -> ed25519_dalek::SigningKey {
     }
 }
 
+#[inline]
 pub fn format_key(key: &ed25519_dalek::VerifyingKey) -> String {
     let mut buf = String::new();
     for b in key.as_bytes() {
