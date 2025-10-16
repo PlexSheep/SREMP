@@ -7,7 +7,6 @@ use std::{fmt::Display, sync::Arc};
 use std::sync::Mutex;
 
 use chrono::{DateTime, Utc};
-use ed25519_dalek::VerifyingKey;
 use serde::{Deserialize, Serialize};
 
 use crate::error::CoreResult;
