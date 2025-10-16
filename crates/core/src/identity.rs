@@ -75,17 +75,32 @@ impl IdentityVerifiedData {
 
 impl Identity {
     /// Creates a new [`Identity`].
-    pub fn build(username: &str, public_key: ed25519_dalek::VerifyingKey) -> CoreResult<Self> {
+    pub fn create(username: &str, private_key: &mut ed25519_dalek::SigningKey) -> CoreResult<Self> {
         Self::validate_username(username)?;
 
-        todo!()
+        let vd = IdentityVerifiedData {
+            username: username.to_string(),
+            identity_key: private_key.verifying_key(),
+            noise_key: generate_good_key_x25519(),
+            flags: Default::default(),
+            extensions: Default::default(),
+            version: 0,
+            created: Utc::now(),
+        };
+
+        let sig = vd.sign(private_key)?;
+        Ok(Self {
+            verified: vd,
+            signature: sig,
+        })
     }
 
     pub fn verify(&self) -> CoreResult<()> {
-        Ok(self
-            .verified
+        self.verified
             .identity_key
-            .verify_strict(self.verified.bytes()?.as_slice(), &self.signature)?)
+            .verify_strict(self.verified.bytes()?.as_slice(), &self.signature)?;
+        Self::validate_username(&self.verified.username)?;
+        Ok(())
     }
 
     /// Returns a reference to the username of this [`Identity`].
@@ -106,7 +121,7 @@ impl Identity {
 impl UserIdentity {
     /// Creates a new [`UserIdentity`].
     pub fn build(username: &str) -> CoreResult<Self> {
-        let key = generate_good_key();
+        let key = generate_good_key_ed25519();
         Self::load(username, key, Utc::now())
     }
 
@@ -134,7 +149,7 @@ impl ContactIdentity {
         first_seen: DateTime<Utc>,
         last_seen: DateTime<Utc>,
     ) -> CoreResult<Self> {
-        let identity = Identity::build(username, public_key)?;
+        let identity = Identity::create(username, public_key)?;
         Ok(Self {
             identity,
             trust,
@@ -151,7 +166,7 @@ impl ContactIdentity {
     /// Get a dummy [`ContactIdentity`], only available in debug mode.
     #[cfg(debug_assertions)]
     pub fn debug_contact() -> Self {
-        let key = generate_good_key();
+        let key = generate_good_key_ed25519();
         ContactIdentity::build(
             "DEBUG_CONTACT",
             key.verifying_key(),
@@ -177,9 +192,40 @@ impl Display for Trust {
     }
 }
 
-fn generate_good_key() -> ed25519_dalek::SigningKey {
+fn generate_good_key_x25519() -> x25519_dalek::StaticSecret {
     let mut csprng: rand::rngs::OsRng = rand::rngs::OsRng;
-    ed25519_dalek::SigningKey::generate(&mut csprng)
+    let mut k;
+    let mut guard = 0;
+    loop {
+        k = x25519_dalek::StaticSecret::random_from_rng(&mut csprng);
+        if !k.verifying_key().is_weak() {
+            return k;
+        }
+        guard += 1;
+        if guard > 10 {
+            panic!(
+                "10 fails in a row to creating a good key. This is almost impossible! Something is wrong with your system!"
+            )
+        }
+    }
+}
+
+fn generate_good_key_ed25519() -> ed25519_dalek::SigningKey {
+    let mut csprng: rand::rngs::OsRng = rand::rngs::OsRng;
+    let mut k;
+    let mut guard = 0;
+    loop {
+        k = ed25519_dalek::SigningKey::random_from_rng(&mut csprng);
+        if !k.verifying_key().is_weak() {
+            return k;
+        }
+        guard += 1;
+        if guard > 10 {
+            panic!(
+                "10 fails in a row to creating a good key. This is almost impossible! Something is wrong with your system!"
+            )
+        }
+    }
 }
 
 pub fn format_key(key: &ed25519_dalek::VerifyingKey) -> String {
