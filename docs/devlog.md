@@ -46,6 +46,8 @@ cryptographically compatible keys.
 - Larger data that should be sent over events and commands should always be in
   an `Arc`. The source of truth should probably also just contain Arced
   data. See #32
+- Decided to arc the UserIdentity too. Hope this does not come back to bite me
+  in the ass when I change it's fields.
 
 ### Notes
 
