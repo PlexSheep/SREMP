@@ -36,12 +36,16 @@ cryptographically compatible keys.
 - Added a simple noise static key rotation function
 - The problem still exists: `Public key of peer (127.0.0.1:54036) is inval id: signature error: Cannot decompress Edwards point`
 - The first full handshake and identity exchange has been made! Commit: `9a97f81c928e5fbbe5e509f8c0dac5891a0c2b72`
+- Put a lot of things in `Arc`s so that we can send them around for cheap.
 
 ### Decisions
 
 - Data to be verified must be serialized with MessagePack. That way, we dont
   need to use `std::mem::transmute` and it's probably more consistent than
   in-memory representation, maybe?
+- Larger data that should be sent over events and commands should always be in
+  an `Arc`. The source of truth should probably also just contain Arced
+  data. See #32
 
 ### Notes
 
