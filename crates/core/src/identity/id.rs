@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ContactId {
     #[serde(flatten)]
-    pub key: ed25519_dalek::VerifyingKey,
+    key: ed25519_dalek::VerifyingKey,
 }
 
 impl From<ed25519_dalek::VerifyingKey> for ContactId {
