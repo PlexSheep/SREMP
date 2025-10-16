@@ -1,10 +1,15 @@
-use std::{collections::HashMap, fmt::Display};
+use std::{
+    collections::HashMap,
+    fmt::{Debug, Display},
+};
 
 use chrono::{DateTime, Utc};
 use ed25519_dalek::ed25519::signature::SignerMut;
 use serde::{Deserialize, Serialize};
 
 use crate::error::CoreResult;
+
+pub type ContactId = ed25519_dalek::VerifyingKey;
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum Trust {
@@ -44,10 +49,11 @@ pub struct Extensions {
     additional_metadata: HashMap<String, Vec<u8>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct UserIdentity {
     pub identity: Identity,
-    pub private_key: ed25519_dalek::SigningKey,
+    pub identity_key: ed25519_dalek::SigningKey,
+    pub noise_key: x25519_dalek::StaticSecret,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -75,20 +81,24 @@ impl IdentityVerifiedData {
 
 impl Identity {
     /// Creates a new [`Identity`].
-    pub fn create(username: &str, private_key: &mut ed25519_dalek::SigningKey) -> CoreResult<Self> {
+    pub fn create(
+        username: &str,
+        identity_private_key: &mut ed25519_dalek::SigningKey,
+        noise_public_key: x25519_dalek::PublicKey,
+    ) -> CoreResult<Self> {
         Self::validate_username(username)?;
 
         let vd = IdentityVerifiedData {
             username: username.to_string(),
-            identity_key: private_key.verifying_key(),
-            noise_key: generate_good_key_x25519(),
+            identity_key: identity_private_key.verifying_key(),
+            noise_key: noise_public_key,
             flags: Default::default(),
             extensions: Default::default(),
             version: 0,
             created: Utc::now(),
         };
 
-        let sig = vd.sign(private_key)?;
+        let sig = vd.sign(identity_private_key)?;
         Ok(Self {
             verified: vd,
             signature: sig,
@@ -120,23 +130,23 @@ impl Identity {
 
 impl UserIdentity {
     /// Creates a new [`UserIdentity`].
-    pub fn build(username: &str) -> CoreResult<Self> {
-        let key = generate_good_key_ed25519();
-        Self::load(username, key, Utc::now())
-    }
+    pub fn create(username: &str) -> CoreResult<Self> {
+        let mut identity_key = generate_good_key_ed25519();
+        let noise_key = generate_good_key_x25519();
+        let noise_pkey = x25519_dalek::PublicKey::from(&noise_key);
 
-    /// Create a [`UserIdentity`] from the necessary values.
-    pub fn load(
-        username: &str,
-        key: ed25519_dalek::SigningKey,
-        created: DateTime<Utc>,
-    ) -> CoreResult<Self> {
-        todo!()
+        let identity = Identity::create(username, &mut identity_key, noise_pkey)?;
+
+        Ok(Self {
+            identity,
+            identity_key,
+            noise_key,
+        })
     }
 
     /// Returns a reference to the private key of this [`UserIdentity`].
     pub fn private_key(&self) -> &ed25519_dalek::SigningKey {
-        &self.private_key
+        &self.identity_key
     }
 }
 
@@ -192,22 +202,19 @@ impl Display for Trust {
     }
 }
 
+impl Debug for UserIdentity {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("UserIdentity")
+            .field("identity", &self.identity)
+            .field("identity_key", &self.identity_key)
+            .field("noise_key", &"{redacted}")
+            .finish()
+    }
+}
+
 fn generate_good_key_x25519() -> x25519_dalek::StaticSecret {
     let mut csprng: rand::rngs::OsRng = rand::rngs::OsRng;
-    let mut k;
-    let mut guard = 0;
-    loop {
-        k = x25519_dalek::StaticSecret::random_from_rng(&mut csprng);
-        if !k.verifying_key().is_weak() {
-            return k;
-        }
-        guard += 1;
-        if guard > 10 {
-            panic!(
-                "10 fails in a row to creating a good key. This is almost impossible! Something is wrong with your system!"
-            )
-        }
-    }
+    x25519_dalek::StaticSecret::random_from_rng(&mut csprng)
 }
 
 fn generate_good_key_ed25519() -> ed25519_dalek::SigningKey {
@@ -215,7 +222,7 @@ fn generate_good_key_ed25519() -> ed25519_dalek::SigningKey {
     let mut k;
     let mut guard = 0;
     loop {
-        k = ed25519_dalek::SigningKey::random_from_rng(&mut csprng);
+        k = ed25519_dalek::SigningKey::generate(&mut csprng);
         if !k.verifying_key().is_weak() {
             return k;
         }

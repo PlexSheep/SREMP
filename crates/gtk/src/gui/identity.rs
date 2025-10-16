@@ -122,7 +122,7 @@ pub(crate) fn dialog_create_identity(app: &gtk::Application, state: UiDomainSync
         }
 
         // Try to create the identity
-        match UserIdentity::build(&username) {
+        match UserIdentity::create(&username) {
             Ok(user_identity) => {
                 {
                     state_clone
