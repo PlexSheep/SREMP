@@ -224,7 +224,7 @@ impl P2PConnection {
 
     fn noise_builder<'a>(user: &'a UserIdentity) -> CoreResult<snow::Builder<'a>> {
         Ok(snow::Builder::new(NOISE_PARAMS.clone())
-            .local_private_key(user.identity_private_key().as_bytes())?)
+            .local_private_key(user.noise_private_key().as_bytes())?)
     }
 
     fn noise_initiator(user: &UserIdentity) -> CoreResult<snow::HandshakeState> {
