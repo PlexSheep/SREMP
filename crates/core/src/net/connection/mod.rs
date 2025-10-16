@@ -153,12 +153,12 @@ impl P2PConnection {
             .get_remote_static()
             .ok_or(CoreError::NoisePeerHasNoPublicKey(remote))?;
 
-        let peer_key_bytes: &[u8; ed25519_dalek::PUBLIC_KEY_LENGTH] = remote_static_key
-            .try_into()
-            .map_err(|_| CoreError::PeerKeyIsMalformed(remote))?;
+        let peer_key_bytes: &[u8; 32 /* that crate does not use a constant for the byte length */] =
+            remote_static_key
+                .try_into()
+                .map_err(|_| CoreError::PeerKeyIsMalformed(remote))?;
 
-        let peer_public_key = ed25519_dalek::VerifyingKey::from_bytes(peer_key_bytes)
-            .map_err(|e| CoreError::PeerKeyIsInvalid { remote, source: e })?;
+        let peer_public_key = x25519_dalek::PublicKey::from(*peer_key_bytes);
 
         let mut transport = noise.into_transport_mode()?;
         log::debug!("Finished noise handshake");
@@ -182,7 +182,7 @@ impl P2PConnection {
         // FIXME: username might be a super long string, we should add some validator for the
         // username.
 
-        if peer_identity.identity_key() != peer_public_key {
+        if peer_identity.noise_key() != peer_public_key {
             log::error!("identity key does not match noise static public key:");
             return Err(CoreError::PeerKeyIsInvalid {
                 remote,
