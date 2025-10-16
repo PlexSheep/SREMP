@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     error::CoreResult,
     identity::{
-        ContactId, Identity,
+        Identity,
         crypto::{generate_good_key_ed25519, generate_good_key_x25519},
     },
 };
