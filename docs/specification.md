@@ -161,7 +161,7 @@ else.
 
 For validation purposes, all fields that must be verifiable should be part of
 a sub structure `IdentityVerifiedData`. The `Identity` contains an Ed25519
-signature over the data of `IdentityVerifiedData`.
+signature over the data of `IdentityVerifiedData`, serialized with MessagePack.
 
 By this mechanism, the `noise_key` and other verified identity data is
 cryptographically bound to the `identity_key`. This prevents an attacker from
