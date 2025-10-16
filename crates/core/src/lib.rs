@@ -27,3 +27,35 @@ macro_rules! current_function {
         &name[..name.len() - 3]
     }};
 }
+
+pub mod ser_helper {
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+    use std::sync::{Arc, Mutex};
+
+    pub fn ser_arc<T: Serialize, S: Serializer>(t: &Arc<T>, s: S) -> Result<S::Ok, S::Error> {
+        (*t).serialize(s)
+    }
+
+    pub fn deser_arc<'de, D: Deserializer<'de>, T: Deserialize<'de>>(
+        d: D,
+    ) -> Result<Arc<T>, D::Error> {
+        let t = T::deserialize(d)?;
+        Ok(Arc::new(t))
+    }
+
+    pub fn ser_arcmut<T: Serialize, S: Serializer>(
+        t: &Arc<Mutex<T>>,
+        s: S,
+    ) -> Result<S::Ok, S::Error> {
+        t.lock()
+            .expect("could not lock mutex for serialization")
+            .serialize(s)
+    }
+
+    pub fn deser_arcmut<'de, D: Deserializer<'de>, T: Deserialize<'de>>(
+        d: D,
+    ) -> Result<Arc<Mutex<T>>, D::Error> {
+        let t = T::deserialize(d)?;
+        Ok(Arc::new(Mutex::new(t)))
+    }
+}

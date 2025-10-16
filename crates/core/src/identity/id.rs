@@ -1,17 +1,20 @@
-use std::fmt::Display;
+use std::{fmt::Display, sync::Arc};
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize)]
+use crate::ser_helper::*;
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ContactId {
     #[serde(flatten)]
-    key: ed25519_dalek::VerifyingKey,
+    #[serde(serialize_with = "ser_arc", deserialize_with = "deser_arc")]
+    key: Arc<ed25519_dalek::VerifyingKey>,
 }
 
 impl From<ed25519_dalek::VerifyingKey> for ContactId {
     #[inline(always)]
     fn from(value: ed25519_dalek::VerifyingKey) -> Self {
-        Self { key: value }
+        Self { key: value.into() }
     }
 }
 
