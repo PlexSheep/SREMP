@@ -14,6 +14,38 @@ project.
 Also, since I'm a night person, I will count sessions continuing into the next
 day as part of the previous one. It's just more convenient that way.
 
+## 2025-10-16 (plexsheep)
+
+It's been a while since I last coded on SREMP. I wasn't really busy, more like
+I was busy doing nothing. Playing some games, going on some activities with
+friends and family, getting my 12 to 16 hours of sleep a day, the stuff you do
+when you have a month of mostly free time after studying and working for years.
+
+Last time, I found the problem that we try to use Ed25519 Keys for the noise
+static key, but the noise static key must be an X25519 Key. Today, I will try to
+implement the changed identity and key management so that we actually use
+cryptographically compatible keys.
+
+### Progress
+
+- Added the fields to identity and added verification and signature mechanism
+- Added some access methods and such, looks really professional
+- Split the identity module into more manageable smaller ones
+- Changed how identity is used in the core crate
+
+### Decisions
+
+- Data to be verified must be serialized with MessagePack. That way, we dont
+  need to use `std::mem::transmute` and it's probably more consistent than
+  in-memory representation, maybe?
+
+### Notes
+
+### Mood
+
+- A bit sleepy but actually well rested
+- In the zone about identities
+
 ## 2025-10-03 (plexsheep)
 
 ### Progress

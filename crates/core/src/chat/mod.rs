@@ -50,6 +50,6 @@ impl Chat {
 impl NetworkDomain {
     pub fn find_socket_addr_for_chat(&self, chat: &Chat) -> Option<SocketAddr> {
         self.active_connections
-            .find_socket_addr_for_contact(&chat.contact.identity.public_key)
+            .find_socket_addr_for_contact(&chat.contact.identity.id())
     }
 }

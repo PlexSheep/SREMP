@@ -79,7 +79,7 @@ impl NetworkDomain {
             .await
             .send_net_evt(NetworkEvent::ConnectionEstablished(
                 remote,
-                remote_identity.public_key,
+                remote_identity.id(),
             ))
             .await;
         Ok(())
