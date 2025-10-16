@@ -152,39 +152,18 @@ impl UserIdentity {
 
 impl ContactIdentity {
     /// Creates a new [`ContactIdentity`].
-    pub fn build(
-        username: &str,
-        public_key: ed25519_dalek::VerifyingKey,
-        trust: Trust,
-        first_seen: DateTime<Utc>,
-        last_seen: DateTime<Utc>,
-    ) -> CoreResult<Self> {
-        let identity = Identity::create(username, public_key)?;
+    pub fn from_peer_identity(identity: Identity, trust: Trust) -> CoreResult<Self> {
         Ok(Self {
             identity,
             trust,
-            first_seen,
-            last_seen,
+            first_seen: Utc::now(),
+            last_seen: Utc::now(),
         })
     }
 
     /// Sets the last-seen timestamp of this [`ContactIdentity`].
     pub fn set_last_seen(&mut self, last_seen: DateTime<Utc>) {
         self.last_seen = last_seen;
-    }
-
-    /// Get a dummy [`ContactIdentity`], only available in debug mode.
-    #[cfg(debug_assertions)]
-    pub fn debug_contact() -> Self {
-        let key = generate_good_key_ed25519();
-        ContactIdentity::build(
-            "DEBUG_CONTACT",
-            key.verifying_key(),
-            Trust::Unknown,
-            Utc::now(),
-            Utc::now(),
-        )
-        .unwrap()
     }
 }
 
