@@ -11,18 +11,14 @@ use serde::{Deserialize, Serialize};
 
 pub mod messages;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct Chat {
     messages: Vec<SharedMessage>,
-    contact: ContactIdentity,
 }
 
 impl Chat {
-    pub fn new(contact: ContactIdentity) -> Self {
-        Self {
-            messages: Vec::new(),
-            contact,
-        }
+    pub fn new() -> Self {
+        Default::default()
     }
 
     pub fn latest_timestamp(&self) -> Option<DateTime<Utc>> {
@@ -31,10 +27,6 @@ impl Chat {
 
     pub fn messages(&self) -> &[SharedMessage] {
         &self.messages
-    }
-
-    pub fn contact(&self) -> &ContactIdentity {
-        &self.contact
     }
 
     pub fn add_message(&mut self, msg: Message) {
@@ -48,8 +40,8 @@ impl Chat {
 }
 
 impl NetworkDomain {
-    pub fn find_socket_addr_for_chat(&self, chat: &Chat) -> Option<SocketAddr> {
+    pub fn find_socket_addr_for_contact(&self, iden: &ContactIdentity) -> Option<SocketAddr> {
         self.active_connections
-            .find_socket_addr_for_contact(&chat.contact.identity.id())
+            .find_socket_addr_for_contact(&iden.id())
     }
 }
