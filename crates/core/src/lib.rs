@@ -35,10 +35,12 @@ pub mod ser_helper {
         sync::{Arc, Mutex},
     };
 
+    #[inline(always)]
     pub fn ser_arc<T: Serialize, S: Serializer>(t: &Arc<T>, s: S) -> Result<S::Ok, S::Error> {
         (*t).serialize(s)
     }
 
+    #[inline(always)]
     pub fn deser_arc<'de, D: Deserializer<'de>, T: Deserialize<'de>>(
         d: D,
     ) -> Result<Arc<T>, D::Error> {
@@ -46,6 +48,25 @@ pub mod ser_helper {
         Ok(Arc::new(t))
     }
 
+    #[inline(always)]
+    pub fn ser_arc_opt<T, S>(t: &Option<Arc<T>>, s: S) -> Result<S::Ok, S::Error>
+    where
+        T: Serialize,
+        S: Serializer,
+        T: Clone,
+    {
+        t.as_ref().map(|i| (**i).clone()).serialize(s)
+    }
+
+    #[inline]
+    pub fn deser_arc_opt<'de, D: Deserializer<'de>, T: Deserialize<'de>>(
+        d: D,
+    ) -> Result<Option<Arc<T>>, D::Error> {
+        let t: Option<_> = Option::<T>::deserialize(d)?;
+        Ok(t.map(|i| Arc::new(i)))
+    }
+
+    #[inline]
     pub fn ser_arc_hm<K, V, S>(hm: &HashMap<K, Arc<V>>, s: S) -> Result<S::Ok, S::Error>
     where
         K: Serialize + Eq + std::hash::Hash,
@@ -56,6 +77,7 @@ pub mod ser_helper {
         hm_clone.serialize(s)
     }
 
+    #[inline]
     pub fn deser_arc_hm<'de, D, K, V>(d: D) -> Result<HashMap<K, Arc<V>>, D::Error>
     where
         K: Serialize + Eq + std::hash::Hash,
@@ -72,6 +94,7 @@ pub mod ser_helper {
         Ok(hm)
     }
 
+    #[inline(always)]
     pub fn ser_arcmut<T: Serialize, S: Serializer>(
         t: &Arc<Mutex<T>>,
         s: S,
@@ -81,6 +104,7 @@ pub mod ser_helper {
             .serialize(s)
     }
 
+    #[inline(always)]
     pub fn deser_arcmut<'de, D: Deserializer<'de>, T: Deserialize<'de>>(
         d: D,
     ) -> Result<Arc<Mutex<T>>, D::Error> {
