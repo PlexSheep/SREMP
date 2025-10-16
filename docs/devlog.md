@@ -35,6 +35,7 @@ cryptographically compatible keys.
 - Applied refactoring for the changed identity structure everywhere else
 - Added a simple noise static key rotation function
 - The problem still exists: `Public key of peer (127.0.0.1:54036) is inval id: signature error: Cannot decompress Edwards point`
+- The first full handshake and identity exchange has been made! Commit: `9a97f81c928e5fbbe5e509f8c0dac5891a0c2b72`
 
 ### Decisions
 
