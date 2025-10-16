@@ -92,8 +92,6 @@ impl P2PConnection {
             len = noise.write_message(&[], &mut buf)?;
             Frame::from_payload(&buf[..len])?.send(tcp_stream).await?;
 
-            log::debug!("Finished noise handshake");
-
             Self::post_handshake(&mut buf, tcp_stream, user, noise, remote).await
         })
         .await?;
