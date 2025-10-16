@@ -23,6 +23,8 @@ pub enum CoreError {
     MessagePackEncode(#[from] rmp_serde::encode::Error),
     #[error("MessagePack decode error: {0}")]
     MessagePackDecode(#[from] rmp_serde::decode::Error),
+    #[error("Signature Error with Ed25519: {0}")]
+    SignatureEd25519(#[from] ed25519_dalek::SignatureError),
     // custom Errors
     #[error("No user identity currently exists")]
     NoUserIdentity,

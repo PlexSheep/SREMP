@@ -19,6 +19,7 @@ chrono = {version = "0.4", features = ["serde"]}
 sremp-core = {path = "./crates/core/"}
 sremp-client = {path = "./crates/client/"}
 ed25519-dalek = { version = "2", features = ["batch", "serde"] }
+x25519-dalek = { version = "2", features = ["serde"] }
 serde = { version = "1", features = ["derive"] }
 rand = "0.8" # not the most recent version, since the rand-core dependency needs to be in sync with that in ed25519-dalek (which is not reexported)
 log = "0.4"

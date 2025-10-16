@@ -1,7 +1,7 @@
 use std::{collections::HashMap, fmt::Display};
 
 use chrono::{DateTime, Utc};
-use ed25519_dalek::{SigningKey, VerifyingKey};
+use ed25519_dalek::ed25519::signature::SignerMut;
 use serde::{Deserialize, Serialize};
 
 use crate::error::CoreResult;
@@ -13,20 +13,6 @@ pub enum Trust {
     Rejected,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Identity {
-    pub username: String, // TODO: 1 to 40 characters according to spec
-    pub public_key: VerifyingKey,
-    pub flags: Flags,
-    pub extensions: Option<Extensions>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
-pub struct Extensions {
-    pub profile_picture: Option<Vec<u8>>,
-    pub additional_metadata: HashMap<String, Vec<u8>>,
-}
-
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct Flags {
     pub uses_relay: bool,
@@ -36,10 +22,32 @@ pub struct Flags {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct IdentityVerifiedData {
+    username: String, // TODO: 1 to 40 characters according to spec
+    identity_key: ed25519_dalek::VerifyingKey,
+    noise_key: x25519_dalek::PublicKey,
+    flags: Flags,
+    extensions: Option<Extensions>,
+    version: u64,
+    created: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Identity {
+    verified: IdentityVerifiedData,
+    signature: ed25519_dalek::Signature,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub struct Extensions {
+    profile_picture: Option<Vec<u8>>,
+    additional_metadata: HashMap<String, Vec<u8>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct UserIdentity {
     pub identity: Identity,
-    pub private_key: SigningKey,
-    pub created: DateTime<Utc>,
+    pub private_key: ed25519_dalek::SigningKey,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -50,22 +58,39 @@ pub struct ContactIdentity {
     pub last_seen: DateTime<Utc>,
 }
 
+impl IdentityVerifiedData {
+    /// NOTE: this is not the in memory representation, but should still be used for signing and
+    /// verification
+    pub fn bytes(&self) -> CoreResult<Vec<u8>> {
+        Ok(rmp_serde::to_vec(self)?)
+    }
+
+    pub fn sign(
+        &self,
+        private_key: &mut ed25519_dalek::SigningKey,
+    ) -> CoreResult<ed25519_dalek::Signature> {
+        Ok(private_key.try_sign(&self.bytes()?)?)
+    }
+}
+
 impl Identity {
     /// Creates a new [`Identity`].
-    pub fn build(username: &str, public_key: VerifyingKey) -> CoreResult<Self> {
+    pub fn build(username: &str, public_key: ed25519_dalek::VerifyingKey) -> CoreResult<Self> {
         Self::validate_username(username)?;
 
-        Ok(Self {
-            username: username.to_string(),
-            public_key,
-            flags: Default::default(),
-            extensions: Default::default(),
-        })
+        todo!()
+    }
+
+    pub fn verify(&self) -> CoreResult<()> {
+        Ok(self
+            .verified
+            .identity_key
+            .verify_strict(self.verified.bytes()?.as_slice(), &self.signature)?)
     }
 
     /// Returns a reference to the username of this [`Identity`].
     pub fn username(&self) -> &str {
-        &self.username
+        &self.verified.username
     }
 
     pub fn validate_username(username: &str) -> CoreResult<()> {
@@ -86,17 +111,16 @@ impl UserIdentity {
     }
 
     /// Create a [`UserIdentity`] from the necessary values.
-    pub fn load(username: &str, key: SigningKey, created: DateTime<Utc>) -> CoreResult<Self> {
-        let identity = Identity::build(username, key.verifying_key())?;
-        Ok(Self {
-            identity,
-            private_key: key,
-            created,
-        })
+    pub fn load(
+        username: &str,
+        key: ed25519_dalek::SigningKey,
+        created: DateTime<Utc>,
+    ) -> CoreResult<Self> {
+        todo!()
     }
 
     /// Returns a reference to the private key of this [`UserIdentity`].
-    pub fn private_key(&self) -> &SigningKey {
+    pub fn private_key(&self) -> &ed25519_dalek::SigningKey {
         &self.private_key
     }
 }
@@ -105,7 +129,7 @@ impl ContactIdentity {
     /// Creates a new [`ContactIdentity`].
     pub fn build(
         username: &str,
-        public_key: VerifyingKey,
+        public_key: ed25519_dalek::VerifyingKey,
         trust: Trust,
         first_seen: DateTime<Utc>,
         last_seen: DateTime<Utc>,
@@ -153,12 +177,12 @@ impl Display for Trust {
     }
 }
 
-fn generate_good_key() -> SigningKey {
+fn generate_good_key() -> ed25519_dalek::SigningKey {
     let mut csprng: rand::rngs::OsRng = rand::rngs::OsRng;
-    SigningKey::generate(&mut csprng)
+    ed25519_dalek::SigningKey::generate(&mut csprng)
 }
 
-pub fn format_key(key: &VerifyingKey) -> String {
+pub fn format_key(key: &ed25519_dalek::VerifyingKey) -> String {
     let mut buf = String::new();
     for b in key.as_bytes() {
         buf.push_str(&format!("{b:02X}"));
