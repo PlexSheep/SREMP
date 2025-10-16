@@ -45,6 +45,104 @@ cryptographically compatible keys.
 
 ### Notes
 
+Shortened log of the first handshake by one of the peers:
+
+```
+
+[2025-10-16T16:25:41Z INFO  sremp_core::domain] Network domain has been started
+[2025-10-16T16:25:41Z INFO  sremp_client::domain] Application domain has started
+[2025-10-16T16:25:41Z TRACE sremp_core::domain] sremp_core::domain::NetworkDomain::run::{{closure}}
+[2025-10-16T16:25:41Z TRACE sremp_gtk::domain::listen] sremp_gtk::domain::listen::<impl sremp_gtk::domain::UiDomain>::fmt_listen_status -> "
+Listener is not active"
+[2025-10-16T16:25:45Z INFO  sremp_gtk::domain] Sending ui command: Set working copy of user identity to E5D7A449F2E5CEE86CF8D252114EEA6366C5
+0D8AB2694DB85FFA5E51E0C22C21 (plex)
+[2025-10-16T16:25:45Z TRACE sremp_gtk::domain] ui command sent
+[2025-10-16T16:25:45Z TRACE sremp_client::domain::jobs] sremp_client::domain::jobs::<impl sremp_client::domain::ClientDomain>::process_ui_co
+mmand::{{closure}}
+[2025-10-16T16:25:45Z INFO  sremp_client::domain::jobs] Processing Ui Command: Set working copy of user identity to E5D7A449F2E5CEE86CF8D252
+114EEA6366C50D8AB2694DB85FFA5E51E0C22C21 (plex)
+[2025-10-16T16:25:45Z TRACE sremp_client::domain::jobs] sremp_client::domain::jobs::<impl sremp_client::domain::ClientDomain>::set_identity:
+:{{closure}}
+[2025-10-16T16:25:45Z TRACE sremp_core::domain::jobs] sremp_core::domain::jobs::<impl sremp_core::domain::NetworkDomain>::process_network_co
+mmand::{{closure}}
+[2025-10-16T16:25:45Z INFO  sremp_core::domain::jobs] Processing Network Command: Set working copy of user identity to E5D7A449F2E5CEE86CF8D
+252114EEA6366C50D8AB2694DB85FFA5E51E0C22C21 (plex)
+[2025-10-16T16:25:45Z INFO  sremp_gtk::jobs] Processing network event: working copy of user identity was set to E5D7A449F2E5CEE86CF8D252114E
+EA6366C50D8AB2694DB85FFA5E51E0C22C21 (plex)
+[2025-10-16T16:25:45Z TRACE sremp_gtk::jobs] borrowing mutable ui domain state
+[2025-10-16T16:25:45Z INFO  sremp_gtk::domain] Created new user identity for username 'plex': E5D7A449F2E5CEE86CF8D252114EEA6366C50D8AB2694D
+B85FFA5E51E0C22C21
+[2025-10-16T16:25:45Z DEBUG sremp_gtk::gui::identity] Showing identity created success window
+[2025-10-16T16:26:05Z INFO  sremp_gtk::domain] Sending ui command: Connect to 127.0.0.1:46207
+[2025-10-16T16:26:05Z TRACE sremp_gtk::domain] ui command sent
+[2025-10-16T16:26:05Z TRACE sremp_client::domain::jobs] sremp_client::domain::jobs::<impl sremp_client::domain::ClientDomain>::process_ui_co
+mmand::{{closure}}
+[2025-10-16T16:26:05Z INFO  sremp_client::domain::jobs] Processing Ui Command: Connect to 127.0.0.1:46207
+[2025-10-16T16:26:05Z TRACE sremp_client::domain::jobs] sremp_client::domain::jobs::<impl sremp_client::domain::ClientDomain>::connect::{{cl
+osure}}
+[2025-10-16T16:26:05Z TRACE sremp_core::domain::jobs] sremp_core::domain::jobs::<impl sremp_core::domain::NetworkDomain>::process_network_co
+mmand::{{closure}}
+[2025-10-16T16:26:05Z INFO  sremp_core::domain::jobs] Processing Network Command: Connect to 127.0.0.1:46207
+[2025-10-16T16:26:05Z TRACE sremp_core::domain::jobs] sremp_core::domain::jobs::<impl sremp_core::domain::NetworkDomain>::connect_to::{{clos
+ure}}
+[2025-10-16T16:26:05Z TRACE sremp_core::net::connection] sremp_core::net::connection::Connection::connect_to::{{closure}}
+[2025-10-16T16:26:05Z TRACE sremp_core::net::connection] sremp_core::net::connection::P2PConnection::connect_to::{{closure}}
+[2025-10-16T16:26:05Z DEBUG sremp_core::net::connection] Tcp Connection Established
+[2025-10-16T16:26:05Z DEBUG sremp_core::net::connection] Beginning noise handshake as initiator
+[2025-10-16T16:26:05Z DEBUG sremp_core::net::connection] Sending Noise: `XX: --> e`
+[2025-10-16T16:26:05Z DEBUG sremp_core::net::connection::frame] Sending Frame
+[2025-10-16T16:26:05Z TRACE sremp_core::net::connection::frame] Sending Length
+[2025-10-16T16:26:05Z TRACE sremp_core::net::connection::frame] Sending version
+[2025-10-16T16:26:05Z TRACE sremp_core::net::connection::frame] Sending Data
+[2025-10-16T16:26:05Z TRACE sremp_core::net::connection::frame] Sending Finished
+[2025-10-16T16:26:05Z DEBUG sremp_core::net::connection] Receiving: `XX: <-- e, ee, s, es`
+[2025-10-16T16:26:05Z DEBUG sremp_core::net::connection::frame] Receiving Frame
+[2025-10-16T16:26:05Z TRACE sremp_core::net::connection::frame] Reading Length
+[2025-10-16T16:26:05Z TRACE sremp_core::net::connection::frame] Length: 110
+[2025-10-16T16:26:05Z TRACE sremp_core::net::connection::frame] Reading version
+[2025-10-16T16:26:05Z TRACE sremp_core::net::connection::frame] Version: SREMP_DIRECT v0.1
+[2025-10-16T16:26:05Z TRACE sremp_core::net::connection::frame] Reading Data
+[2025-10-16T16:26:05Z DEBUG sremp_core::net::connection] Sending Noise: `XX: --> s, se`
+[2025-10-16T16:26:05Z DEBUG sremp_core::net::connection::frame] Sending Frame
+[2025-10-16T16:26:05Z TRACE sremp_core::net::connection::frame] Sending Length
+[2025-10-16T16:26:05Z TRACE sremp_core::net::connection::frame] Sending version
+[2025-10-16T16:26:05Z TRACE sremp_core::net::connection::frame] Sending Data
+[2025-10-16T16:26:05Z TRACE sremp_core::net::connection::frame] Sending Finished
+[2025-10-16T16:26:05Z DEBUG sremp_core::net::connection] Finished noise handshake
+[2025-10-16T16:26:05Z DEBUG sremp_core::net::connection] Finished noise handshake
+[2025-10-16T16:26:05Z DEBUG sremp_core::net::connection] Sending identity to peer
+[2025-10-16T16:26:05Z DEBUG sremp_core::net::connection::frame] Sending Frame
+[2025-10-16T16:26:05Z TRACE sremp_core::net::connection::frame] Sending Length
+[2025-10-16T16:26:05Z TRACE sremp_core::net::connection::frame] Sending version
+[2025-10-16T16:26:05Z TRACE sremp_core::net::connection::frame] Sending Data
+[2025-10-16T16:26:05Z TRACE sremp_core::net::connection::frame] Sending Finished
+[2025-10-16T16:26:05Z DEBUG sremp_core::net::connection] Receiving identity from peer
+[2025-10-16T16:26:05Z DEBUG sremp_core::net::connection::frame] Receiving Frame
+[2025-10-16T16:26:05Z TRACE sremp_core::net::connection::frame] Reading Length
+[2025-10-16T16:26:05Z TRACE sremp_core::net::connection::frame] Length: 269
+[2025-10-16T16:26:05Z TRACE sremp_core::net::connection::frame] Reading version
+[2025-10-16T16:26:05Z TRACE sremp_core::net::connection::frame] Version: SREMP_DIRECT v0.1
+[2025-10-16T16:26:05Z TRACE sremp_core::net::connection::frame] Reading Data
+[2025-10-16T16:26:05Z DEBUG sremp_core::net::connection] Received (unverified) Identity: Identity {...}
+[2025-10-16T16:26:05Z DEBUG sremp_core::identity::crypto] Verifying Identity B2BE45C042A564F4884FD34F6BC4C400FC710027DC149BF4A4D6DDD81592924D.
+[2025-10-16T16:26:05Z DEBUG sremp_core::identity::crypto] Signature is valid
+[2025-10-16T16:26:05Z DEBUG sremp_core::identity::crypto] Username is valid
+[2025-10-16T16:26:05Z DEBUG sremp_core::net::connection] Noise Handshake and identity exchange with peer 127.0.0.1:46207 successful
+[2025-10-16T16:26:05Z TRACE sremp_core::domain::jobs] sremp_core::domain::jobs::<impl sremp_core::domain::NetworkDomain>::init_connection::{{closure}}
+[2025-10-16T16:26:05Z DEBUG sremp_core::domain::jobs] Initializing TLS connection for 127.0.0.1:46207
+[2025-10-16T16:26:05Z INFO  sremp_core::domain] Emitting net event: Connection established with 127.0.0.1:46207 (B2BE45C042A564F4884FD34F6BC4C400FC710027DC149BF
+4A4D6DDD81592924D)
+[2025-10-16T16:26:05Z TRACE sremp_client::domain::jobs] sremp_client::domain::jobs::<impl sremp_client::domain::ClientDomain>::process_net_event::{{closure}}
+[2025-10-16T16:26:05Z INFO  sremp_client::domain::jobs] Processing Net Event: Connection established with 127.0.0.1:46207 (B2BE45C042A564F4884FD34F6BC4C400FC710
+027DC149BF4A4D6DDD81592924D)
+[2025-10-16T16:26:05Z INFO  sremp_client::domain] Emitting ui event: Connection established with 127.0.0.1:46207 (B2BE45C042A564F4884FD34F6BC4C400FC710027DC149B
+F4A4D6DDD81592924D)
+[2025-10-16T16:26:05Z INFO  sremp_gtk::jobs] Processing network event: Connection established with 127.0.0.1:46207 (B2BE45C042A564F4884FD34F6BC4C400FC710027DC14
+9BF4A4D6DDD81592924D)
+[2025-10-16T16:26:05Z WARN  sremp_gtk::jobs] Received unimplemented Ui event: Connection established with 127.0.0.1:46207 (B2BE45C042A564F4884FD34F6BC4C400FC710
+027DC149BF4A4D6DDD81592924D)
+```
+
 ### Mood
 
 - A bit sleepy but actually well rested
