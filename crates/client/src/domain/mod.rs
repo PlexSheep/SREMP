@@ -11,16 +11,17 @@ mod jobs;
 pub use commands::UiCommand;
 pub use events::UiEvent;
 use sremp_core::{
-    chat::Chat,
     domain::{NetworkCommand, NetworkEvent},
     error::CoreError,
     identity::{ContactId, UserIdentity},
 };
 
-use crate::domain::known_identities::KnownIdentities;
 use crate::error::ClientResult;
 
+pub mod chats;
+use chats::*;
 pub mod known_identities;
+use known_identities::*;
 
 pub type ClientDomainSync = Arc<RwLock<ClientDomain>>;
 
@@ -29,7 +30,7 @@ const JOB_ITERATION_INTERVAL_MS: u64 = 200;
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct ClientDomain {
     pub(crate) known_identities: KnownIdentities,
-    pub(crate) chats: HashMap<ContactId, Chat>,
+    pub(crate) chats: Chats,
     pub(crate) user_identity: Option<UserIdentity>,
     pub(crate) open_connections: HashMap<ContactId, SocketAddr>,
     #[serde(skip)]
