@@ -105,6 +105,7 @@ impl Identity {
         })
     }
 
+    #[inline]
     pub fn verify(&self) -> CoreResult<()> {
         self.verified
             .identity_key
@@ -113,7 +114,22 @@ impl Identity {
         Ok(())
     }
 
+    fn post_update(&mut self, private_key: &mut ed25519_dalek::SigningKey) -> CoreResult<()> {
+        if let Some(nv) = self.verified.version.checked_add(1) {
+            self.verified.version = nv;
+        } else {
+            panic!(
+                "Updating the identity has failed: Version overflow (was {})",
+                self.verified.version
+            )
+        }
+
+        self.signature = self.verified.sign(private_key)?;
+        Ok(())
+    }
+
     /// Returns a reference to the username of this [`Identity`].
+    #[inline]
     pub fn username(&self) -> &str {
         &self.verified.username
     }
@@ -125,6 +141,82 @@ impl Identity {
         } else {
             Ok(())
         }
+    }
+
+    #[inline]
+    pub fn set_username(
+        &mut self,
+        username: &str,
+        private_key: &mut ed25519_dalek::SigningKey,
+    ) -> CoreResult<()> {
+        Self::validate_username(username)?;
+        self.verified.username = username.to_string();
+        self.post_update(private_key)
+    }
+
+    #[inline(always)]
+    pub fn id(&self) -> ContactId {
+        self.identity_key()
+    }
+
+    #[inline(always)]
+    pub fn identity_key(&self) -> ed25519_dalek::VerifyingKey {
+        self.verified.identity_key
+    }
+
+    #[inline(always)]
+    pub fn noise_key(&self) -> x25519_dalek::PublicKey {
+        self.verified.noise_key
+    }
+
+    #[inline]
+    pub fn set_noise_key(
+        &mut self,
+        noise_key: x25519_dalek::PublicKey,
+        private_key: &mut ed25519_dalek::SigningKey,
+    ) -> CoreResult<()> {
+        self.verified.noise_key = noise_key;
+        self.post_update(private_key)
+    }
+
+    #[inline(always)]
+    pub fn flags(&self) -> Flags {
+        self.verified.flags
+    }
+
+    #[inline]
+    pub fn set_flags(
+        &mut self,
+        flags: Flags,
+        private_key: &mut ed25519_dalek::SigningKey,
+    ) -> CoreResult<()> {
+        self.verified.flags = flags;
+        self.post_update(private_key)
+    }
+
+    #[inline(always)]
+    pub fn extensions(&self) -> Option<&Extensions> {
+        self.verified.extensions.as_ref()
+    }
+
+    #[inline]
+    pub fn set_extensions(
+        &mut self,
+        extensions: Option<Extensions>,
+        private_key: &mut ed25519_dalek::SigningKey,
+    ) -> CoreResult<()> {
+        self.verified.extensions = extensions;
+        self.post_update(private_key)
+    }
+
+    #[inline(always)]
+    pub fn version(&self) -> u64 {
+        self.verified.version
+    }
+
+    #[inline(always)]
+    pub fn created(&self) -> DateTime<Utc> {
+        self.verified.created
     }
 }
 
