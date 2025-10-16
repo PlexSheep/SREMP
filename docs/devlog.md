@@ -32,6 +32,9 @@ cryptographically compatible keys.
 - Added some access methods and such, looks really professional
 - Split the identity module into more manageable smaller ones
 - Changed how identity is used in the core crate
+- Applied refactoring for the changed identity structure everywhere else
+- Added a simple noise static key rotation function
+- The problem still exists: `Public key of peer (127.0.0.1:54036) is inval id: signature error: Cannot decompress Edwards point`
 
 ### Decisions
 
