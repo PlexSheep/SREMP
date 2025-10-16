@@ -52,7 +52,7 @@ impl Identity {
 }
 
 pub(super) fn generate_good_key_x25519() -> x25519_dalek::StaticSecret {
-    let mut csprng: rand::rngs::OsRng = rand::rngs::OsRng;
+    let csprng: rand::rngs::OsRng = rand::rngs::OsRng;
     x25519_dalek::StaticSecret::random_from_rng(csprng)
 }
 
