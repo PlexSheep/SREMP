@@ -67,7 +67,7 @@ pub(crate) fn widget_chat_card(
         .margin_end(GUI_SPACING_LARGE)
         .build();
 
-    w_box.append(&label(chat.contact().identity.username().to_string()));
+    w_box.append(&label("TODO: find a way to get the username here"));
 
     gtk::Frame::builder()
         .margin_top(GUI_SPACING_MID)

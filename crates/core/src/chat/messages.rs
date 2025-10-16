@@ -40,9 +40,9 @@ pub struct MessageAttachments {
     pub files: Vec<Vec<u8>>,
 }
 
-// this macro makes it a bit easier to declare our flags, even if imperfect because we cant create
-// concatenated IDs with declarative macros.
-// Ideally, this would be a proc macro, but those are kinda hard to code.
+/// this macro makes it a bit easier to declare our flags, even if imperfect because we cant create
+/// concatenated IDs with declarative macros.
+/// Ideally, this would be a proc macro, but those are kinda hard to code.
 macro_rules! declare_flags {
     ($sname:ident ,$($flag:ident $(,)?)+) => {
         #[derive(Debug, Clone, Serialize, Deserialize, Default)]

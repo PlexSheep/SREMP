@@ -45,7 +45,7 @@ impl ClientDomain {
                     .await
             }
             NetworkEvent::ConnectionEstablished(remote, iden) => {
-                let cid = self.known_identities.create_or_update(&iden)?;
+                self.known_identities.create_or_update(&iden)?;
                 self.send_ui_evt(UiEvent::ConnectionEstablished(remote, iden.id()))
                     .await
             }
@@ -120,7 +120,7 @@ impl ClientDomain {
                 return Err(ClientError::NoConnection(to.into()));
             }
         };
-        self.send_net_cmd(NetworkCommand::SendMessage(*remote, to, data))
+        self.send_net_cmd(NetworkCommand::SendMessage(*remote, to.clone(), data))
             .await;
         self.send_ui_evt(UiEvent::MessageSent(*remote, to, msg))
             .await;

@@ -30,7 +30,10 @@ macro_rules! current_function {
 
 pub mod ser_helper {
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
-    use std::sync::{Arc, Mutex};
+    use std::{
+        collections::HashMap,
+        sync::{Arc, Mutex},
+    };
 
     pub fn ser_arc<T: Serialize, S: Serializer>(t: &Arc<T>, s: S) -> Result<S::Ok, S::Error> {
         (*t).serialize(s)
@@ -41,6 +44,32 @@ pub mod ser_helper {
     ) -> Result<Arc<T>, D::Error> {
         let t = T::deserialize(d)?;
         Ok(Arc::new(t))
+    }
+
+    pub fn ser_arc_hm<K, V, S>(hm: &HashMap<K, Arc<V>>, s: S) -> Result<S::Ok, S::Error>
+    where
+        K: Serialize + Eq + std::hash::Hash,
+        V: Serialize + Clone,
+        S: Serializer,
+    {
+        let hm_clone: HashMap<&K, V> = hm.iter().map(|(k, v)| (k, (**v).clone())).collect();
+        hm_clone.serialize(s)
+    }
+
+    pub fn deser_arc_hm<'de, D, K, V>(d: D) -> Result<HashMap<K, Arc<V>>, D::Error>
+    where
+        K: Serialize + Eq + std::hash::Hash,
+        V: Serialize + Clone,
+        D: Deserializer<'de>,
+        K: Deserialize<'de>,
+        V: Deserialize<'de>,
+    {
+        let hm_clone: HashMap<K, V> = HashMap::deserialize(d)?;
+        let hm = hm_clone
+            .into_iter()
+            .map(|(k, v)| (k, Arc::new(v)))
+            .collect();
+        Ok(hm)
     }
 
     pub fn ser_arcmut<T: Serialize, S: Serializer>(
