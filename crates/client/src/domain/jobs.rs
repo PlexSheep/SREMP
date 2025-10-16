@@ -44,8 +44,9 @@ impl ClientDomain {
                 self.send_ui_evt(UiEvent::ConnectionFailed(remote, reason))
                     .await
             }
-            NetworkEvent::ConnectionEstablished(remote, reason) => {
-                self.send_ui_evt(UiEvent::ConnectionEstablished(remote, reason))
+            NetworkEvent::ConnectionEstablished(remote, iden) => {
+                let cid = self.known_identities.create_or_update(&iden)?;
+                self.send_ui_evt(UiEvent::ConnectionEstablished(remote, iden.id()))
                     .await
             }
             NetworkEvent::MessageSent(remote, key, data) => {
@@ -116,7 +117,7 @@ impl ClientDomain {
         let remote = match self.open_connections.get(&to) {
             Some(r) => r,
             None => {
-                return Err(ClientError::NoConnection(to));
+                return Err(ClientError::NoConnection(to.into()));
             }
         };
         self.send_net_cmd(NetworkCommand::SendMessage(*remote, to, data))

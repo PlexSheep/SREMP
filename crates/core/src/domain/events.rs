@@ -1,10 +1,13 @@
 use std::{fmt::Display, net::SocketAddr, sync::Arc};
 
-use crate::{error::CoreError, identity::ContactId};
+use crate::{
+    error::CoreError,
+    identity::{ContactId, Identity},
+};
 
 #[derive(Debug)]
 pub enum NetworkEvent {
-    ConnectionEstablished(SocketAddr, ContactId),
+    ConnectionEstablished(SocketAddr, Arc<Identity>),
     ConnectionLost(SocketAddr, ContactId),
     IncomingMessage(SocketAddr, ContactId, Arc<Vec<u8>>),
     MessageSent(SocketAddr, ContactId, Arc<Vec<u8>>),
@@ -21,8 +24,8 @@ impl Display for NetworkEvent {
             f,
             "{}",
             match self {
-                Self::ConnectionEstablished(addr, key) =>
-                    format!("Connection established with {addr} ({})", key),
+                Self::ConnectionEstablished(addr, iden) =>
+                    format!("Connection established with {addr} ({})", iden.id()),
                 Self::ConnectionLost(addr, key) =>
                     format!("Peer {addr} ({}) has disconnected", key),
                 Self::IncomingMessage(addr, key, _msg) =>
