@@ -29,11 +29,11 @@ impl Display for UiEvent {
             "{}",
             match self {
                 Self::ConnectionEstablished(addr, id) =>
-                    format!("Connection established with {addr} ({})", id),
-                Self::ConnectionLost(addr, id) => format!("Peer {addr} ({}) has disconnected", id),
+                    format!("Connection established with {addr} ({id})"),
+                Self::ConnectionLost(addr, id) => format!("Peer {addr} ({id}) has disconnected"),
                 Self::IncomingMessage(addr, id, _msg) =>
-                    format!("Message received from {addr} ({})", id),
-                Self::MessageSent(addr, id, _msg) => format!("Message sent to {addr} ({})", id),
+                    format!("Message received from {addr} ({id})"),
+                Self::MessageSent(addr, id, _msg) => format!("Message sent to {addr} ({id})"),
                 Self::ConnectionFailed(addr, reason) =>
                     format!("Connection to {addr} attempt was aborted: {reason}"),
                 Self::ListenerStarted(addr) =>
@@ -53,11 +53,11 @@ impl Display for UiEvent {
                     }
                 }
                 Self::ChatLoaded(chat) => format!(
-                    "Chat with '{}' was loaded",
-                    chat.contact().identity.username()
+                    "Chat was loaded (last msg at {:?})",
+                    chat.messages().last().map(|m| m.meta().time_received)
                 ),
                 Self::LoadInitialChats(chats) => format!("Loaded {} chats", chats.len()),
-                Self::ChatNotFound(id) => format!("Chat with id {} does not exist", id),
+                Self::ChatNotFound(id) => format!("Chat with id {id} does not exist"),
             }
         )
     }
