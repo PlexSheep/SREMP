@@ -1,26 +1,25 @@
 use std::{collections::HashMap, fmt::Display, net::SocketAddr};
 
-use ed25519_dalek::VerifyingKey;
 use sremp_core::{
     chat::{Chat, messages::SharedMessage},
-    identity::{UserIdentity, format_key},
+    identity::{ContactId, UserIdentity},
 };
 
 #[derive(Debug, Clone)]
 #[allow(clippy::large_enum_variant)]
 pub enum UiEvent {
-    ConnectionEstablished(SocketAddr, VerifyingKey),
-    ConnectionLost(SocketAddr, VerifyingKey),
-    IncomingMessage(SocketAddr, VerifyingKey, SharedMessage),
-    MessageSent(SocketAddr, VerifyingKey, SharedMessage),
+    ConnectionEstablished(SocketAddr, ContactId),
+    ConnectionLost(SocketAddr, ContactId),
+    IncomingMessage(SocketAddr, ContactId, SharedMessage),
+    MessageSent(SocketAddr, ContactId, SharedMessage),
     ConnectionReset(SocketAddr),
     ConnectionFailed(SocketAddr, String),
     ListenerStarted(SocketAddr),
     ListenerStopped,
     IdentitySet(Option<UserIdentity>),
-    LoadInitialChats(HashMap<VerifyingKey, Chat>),
+    LoadInitialChats(HashMap<ContactId, Chat>),
     ChatLoaded(Chat),
-    ChatNotFound(VerifyingKey),
+    ChatNotFound(ContactId),
 }
 
 impl Display for UiEvent {
@@ -29,14 +28,12 @@ impl Display for UiEvent {
             f,
             "{}",
             match self {
-                Self::ConnectionEstablished(addr, key) =>
-                    format!("Connection established with {addr} ({})", format_key(key)),
-                Self::ConnectionLost(addr, key) =>
-                    format!("Peer {addr} ({}) has disconnected", format_key(key)),
-                Self::IncomingMessage(addr, key, _msg) =>
-                    format!("Message received from {addr} ({})", format_key(key)),
-                Self::MessageSent(addr, key, _msg) =>
-                    format!("Message sent to {addr} ({})", format_key(key)),
+                Self::ConnectionEstablished(addr, id) =>
+                    format!("Connection established with {addr} ({})", id),
+                Self::ConnectionLost(addr, id) => format!("Peer {addr} ({}) has disconnected", id),
+                Self::IncomingMessage(addr, id, _msg) =>
+                    format!("Message received from {addr} ({})", id),
+                Self::MessageSent(addr, id, _msg) => format!("Message sent to {addr} ({})", id),
                 Self::ConnectionFailed(addr, reason) =>
                     format!("Connection to {addr} attempt was aborted: {reason}"),
                 Self::ListenerStarted(addr) =>
@@ -48,7 +45,7 @@ impl Display for UiEvent {
                     if let Some(id) = id {
                         format!(
                             "working copy of user identity was set to {} ({})",
-                            format_key(&id.identity.public_key),
+                            &id.identity.id(),
                             id.identity.username()
                         )
                     } else {
@@ -60,8 +57,7 @@ impl Display for UiEvent {
                     chat.contact().identity.username()
                 ),
                 Self::LoadInitialChats(chats) => format!("Loaded {} chats", chats.len()),
-                Self::ChatNotFound(key) =>
-                    format!("Chat with key {} does not exist", format_key(key)),
+                Self::ChatNotFound(id) => format!("Chat with id {} does not exist", id),
             }
         )
     }

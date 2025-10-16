@@ -1,7 +1,6 @@
 use std::{collections::HashMap, net::SocketAddr, sync::Arc};
 
 use async_channel::{Receiver, Sender};
-use ed25519_dalek::VerifyingKey;
 use serde::{Deserialize, Serialize};
 use tokio::{sync::RwLock, task::JoinHandle};
 
@@ -15,7 +14,7 @@ use sremp_core::{
     chat::Chat,
     domain::{NetworkCommand, NetworkEvent},
     error::CoreError,
-    identity::UserIdentity,
+    identity::{ContactId, UserIdentity},
 };
 
 use crate::domain::known_identities::KnownIdentities;
@@ -30,9 +29,9 @@ const JOB_ITERATION_INTERVAL_MS: u64 = 200;
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct ClientDomain {
     pub(crate) known_identities: KnownIdentities,
-    pub(crate) chats: HashMap<VerifyingKey, Chat>,
+    pub(crate) chats: HashMap<ContactId, Chat>,
     pub(crate) user_identity: Option<UserIdentity>,
-    pub(crate) open_connections: HashMap<VerifyingKey, SocketAddr>,
+    pub(crate) open_connections: HashMap<ContactId, SocketAddr>,
     #[serde(skip)]
     channels: Option<Channels>,
 }

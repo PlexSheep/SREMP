@@ -1,12 +1,11 @@
 use std::{net::SocketAddr, sync::Arc};
 
-use ed25519_dalek::VerifyingKey;
 use sremp_core::{
     chat::messages::SharedMessage,
     current_function,
     domain::{NetworkCommand, NetworkEvent},
     error::{CoreError, CoreResult},
-    identity::UserIdentity,
+    identity::{ContactId, UserIdentity},
 };
 
 use crate::{
@@ -111,11 +110,7 @@ impl ClientDomain {
         Ok(())
     }
 
-    pub(crate) async fn send_message(
-        &self,
-        to: VerifyingKey,
-        msg: SharedMessage,
-    ) -> ClientResult<()> {
+    pub(crate) async fn send_message(&self, to: ContactId, msg: SharedMessage) -> ClientResult<()> {
         log::trace!("{}", current_function!());
         let data: Arc<Vec<u8>> = Arc::new(msg.to_wire());
         let remote = match self.open_connections.get(&to) {
@@ -131,13 +126,13 @@ impl ClientDomain {
         Ok(())
     }
 
-    pub(crate) async fn load_chat(&self, key: VerifyingKey) -> ClientResult<()> {
+    pub(crate) async fn load_chat(&self, id: ContactId) -> ClientResult<()> {
         log::trace!("{}", current_function!());
-        if self.chats.contains_key(&key) {
-            self.send_ui_evt(UiEvent::ChatLoaded(self.chats.get(&key).unwrap().clone()))
+        if self.chats.contains_key(&id) {
+            self.send_ui_evt(UiEvent::ChatLoaded(self.chats.get(&id).unwrap().clone()))
                 .await;
         } else {
-            self.send_ui_evt(UiEvent::ChatNotFound(key)).await;
+            self.send_ui_evt(UiEvent::ChatNotFound(id)).await;
         }
         Ok(())
     }
@@ -145,7 +140,7 @@ impl ClientDomain {
     pub(crate) async fn incoming_message(
         &self,
         remote: SocketAddr,
-        key: VerifyingKey,
+        id: ContactId,
         data: Arc<Vec<u8>>,
     ) -> CoreResult<()> {
         todo!()
