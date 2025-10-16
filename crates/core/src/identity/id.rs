@@ -23,7 +23,7 @@ impl PartialOrd for ContactId {
 
 impl Ord for ContactId {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.key.as_bytes().cmp(&other.key.as_bytes())
+        self.key.as_bytes().cmp(other.key.as_bytes())
     }
 }
 
