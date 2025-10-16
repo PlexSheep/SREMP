@@ -17,7 +17,13 @@ impl From<ed25519_dalek::VerifyingKey> for ContactId {
 
 impl PartialOrd for ContactId {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.key.as_bytes().partial_cmp(&other.key.as_bytes())
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for ContactId {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.key.as_bytes().cmp(&other.key.as_bytes())
     }
 }
 
