@@ -1,9 +1,6 @@
 use std::{fmt::Display, net::SocketAddr, sync::Arc};
 
-use crate::{
-    error::CoreError,
-    identity::{ContactId, format_key},
-};
+use crate::{error::CoreError, identity::ContactId};
 
 #[derive(Debug)]
 pub enum NetworkEvent {

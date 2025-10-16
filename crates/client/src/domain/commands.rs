@@ -1,9 +1,8 @@
 use std::{fmt::Display, net::SocketAddr};
 
-use ed25519_dalek::VerifyingKey;
 use sremp_core::{
     chat::messages::SharedMessage,
-    identity::{ContactId, UserIdentity, format_key},
+    identity::{ContactId, UserIdentity},
 };
 
 #[derive(Debug, Clone)]

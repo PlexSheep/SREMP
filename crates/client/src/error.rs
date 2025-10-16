@@ -1,8 +1,5 @@
 use async_channel::SendError;
-use sremp_core::{
-    error::CoreError,
-    identity::{ContactId, format_key},
-};
+use sremp_core::{error::CoreError, identity::ContactId};
 use thiserror::Error;
 
 use crate::domain::{UiCommand, UiEvent};
