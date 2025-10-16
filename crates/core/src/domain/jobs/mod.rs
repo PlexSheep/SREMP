@@ -50,7 +50,6 @@ impl NetworkDomain {
         connection: Connection,
     ) -> CoreResult<()> {
         log::trace!("{}", current_function!());
-        log::debug!("Initializing TLS connection for {remote}");
         let remote_identity = connection.peer_identity().await.clone();
 
         match state.write().await.active_connections.entry(remote) {
