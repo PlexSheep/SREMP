@@ -35,7 +35,7 @@ impl MessageBubble {
             None => panic!("unknwon author: {:?}", self.meta().author_key.to_bytes()),
         };
 
-        let w_lbl_author = label(&author.identity.username);
+        let w_lbl_author = label(author.identity.username());
         let w_lbl_time = label(self.meta().time_received);
         w_lbl_time.set_halign(gtk::Align::Start);
         w_lbl_author.set_halign(gtk::Align::Start);

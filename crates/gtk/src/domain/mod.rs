@@ -87,7 +87,7 @@ impl UiDomain {
             log::info!(
                 "Created new user identity for username '{}': {}",
                 iden.identity.username(),
-                format_key(&iden.identity.public_key)
+                format_key(&iden.identity.identity_key())
             );
             show_identity_created_success(iden);
         }

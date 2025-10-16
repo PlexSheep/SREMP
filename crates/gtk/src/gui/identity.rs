@@ -160,7 +160,7 @@ pub(crate) fn show_identity_created_success(user_identity: UserIdentity) {
     let w_lbl = label(format!(
         "Your SREMP identity has been created.\n\nUsername: {}\nPublic Key: {}\n\nYou can now start messaging!",
         user_identity.identity.username(),
-        sremp_core::identity::format_key(&user_identity.identity.public_key)
+        sremp_core::identity::format_key(&user_identity.identity.identity_key())
     ));
 
     let w_btn_ok = gtk::Button::builder().label("OK").build();
@@ -211,9 +211,9 @@ pub(crate) fn show_user_identity(app: &gtk::Application, user: UserIdentity) {
     w_box.append(&label(format!("Username: {}", user.identity.username())));
     w_box.append(&label(format!(
         "Public Key: {}",
-        format_key(&user.identity.public_key)
+        format_key(&user.identity.identity_key())
     )));
-    w_box.append(&label(format!("Created: {}", user.created)));
+    w_box.append(&label(format!("Created: {}", user.identity.created())));
 
     win_dialog.set_child(Some(&w_box));
 
@@ -245,7 +245,7 @@ pub(crate) fn show_contact_identity(app: &gtk::Application, contact: &ContactIde
     w_box.append(&label(format!("Username: {}", contact.identity.username())));
     w_box.append(&label(format!(
         "Public Key: {}",
-        format_key(&contact.identity.public_key)
+        format_key(&contact.identity.identity_key())
     )));
     w_box.append(&label(format!("Trust: {}", contact.trust)));
     w_box.append(&label(format!("First Seen: {}", contact.first_seen)));
