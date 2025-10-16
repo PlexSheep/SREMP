@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use async_channel::SendError;
 use sremp_core::{error::CoreError, identity::ContactId};
 use thiserror::Error;
@@ -15,7 +17,7 @@ pub enum ClientError {
     #[error(transparent)]
     CoreError(CoreError),
     #[error("No connection exists to {}. Can't send message to them!", .0)]
-    NoConnection(ContactId),
+    NoConnection(Arc<ContactId>),
 }
 
 impl From<CoreError> for ClientError {
