@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use gtk::prelude::*;
 use sremp_core::identity::{ContactIdentity, UserIdentity, format_key};
 
@@ -125,6 +127,7 @@ pub(crate) fn dialog_create_identity(app: &gtk::Application, state: UiDomainSync
         match UserIdentity::create(&username) {
             Ok(user_identity) => {
                 {
+                    let user_identity = Arc::new(user_identity);
                     state_clone
                         .borrow_mut()
                         .set_user_identity(Some(user_identity.clone()));
@@ -147,7 +150,7 @@ pub(crate) fn dialog_create_identity(app: &gtk::Application, state: UiDomainSync
 }
 
 /// Shows a success dialog after identity creation
-pub(crate) fn show_identity_created_success(user_identity: UserIdentity) {
+pub(crate) fn show_identity_created_success(user_identity: Arc<UserIdentity>) {
     let w_box = gtk::Box::builder()
         .orientation(gtk::Orientation::Vertical)
         .spacing(GUI_SPACING_MID)

@@ -11,7 +11,7 @@ pub enum NetworkCommand {
     /// Associated [SocketAddr] is the local addres on which to listen, not a remote address
     StartListener(SocketAddr),
     StopListener,
-    SetIdentity(Option<UserIdentity>),
+    SetIdentity(Option<Arc<UserIdentity>>),
 }
 
 impl Display for NetworkCommand {

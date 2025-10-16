@@ -1,13 +1,12 @@
-use std::{collections::HashMap, ops::Deref, rc::Rc};
+use std::{collections::HashMap, ops::Deref, rc::Rc, sync::Arc};
 
 use async_channel::{Receiver, Sender};
-use ed25519_dalek::VerifyingKey;
 use tokio::sync::RwLock;
 
 use sremp_client::domain::{UiCommand, UiEvent};
 use sremp_core::{
     chat::Chat,
-    identity::{UserIdentity, format_key},
+    identity::{ContactId, UserIdentity, format_key},
 };
 
 pub(crate) mod connect;
@@ -27,9 +26,9 @@ pub(crate) struct UiDomain {
     pub(crate) listen_status: ListenerStatus,
     // actual UI stuff
     pub(crate) tracked_widgets: TrackedWidgets,
-    chats: HashMap<VerifyingKey, Chat>,
-    user_identity: Option<UserIdentity>,
-    selected_chat: Option<VerifyingKey>,
+    chats: HashMap<ContactId, Chat>,
+    user_identity: Option<Arc<UserIdentity>>,
+    selected_chat: Option<ContactId>,
 }
 
 #[derive(Debug, Clone)]
@@ -69,18 +68,18 @@ impl UiDomain {
     }
 
     #[inline]
-    pub(crate) fn user_identity(&self) -> Option<&UserIdentity> {
-        self.user_identity.as_ref()
+    pub(crate) fn user_identity(&self) -> Option<Arc<UserIdentity>> {
+        self.user_identity.clone()
     }
 
     #[inline]
-    pub(crate) fn set_user_identity(&mut self, iden: Option<UserIdentity>) {
+    pub(crate) fn set_user_identity(&mut self, iden: Option<Arc<UserIdentity>>) {
         // we actually set the user identity working copy for the UI domain if the application
         // domain emits the event that tells us to do so
         self.send_cmd(UiCommand::SetIdentity(iden));
     }
 
-    pub(crate) fn apply_user_identity(&mut self, iden: Option<UserIdentity>) {
+    pub(crate) fn apply_user_identity(&mut self, iden: Option<Arc<UserIdentity>>) {
         self.user_identity = iden.clone();
 
         if let Some(iden) = iden {
@@ -93,11 +92,11 @@ impl UiDomain {
         }
     }
 
-    pub(crate) fn chats(&self) -> &HashMap<VerifyingKey, Chat> {
+    pub(crate) fn chats(&self) -> &HashMap<ContactId, Chat> {
         &self.chats
     }
 
-    pub(crate) fn set_current_chat(&mut self, key: Option<VerifyingKey>) {
+    pub(crate) fn set_current_chat(&mut self, key: Option<ContactId>) {
         if let Some(key) = key {
             if self.chats.contains_key(&key) {
                 self.selected_chat = Some(key);

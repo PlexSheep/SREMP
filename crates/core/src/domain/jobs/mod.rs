@@ -1,4 +1,4 @@
-use std::{collections::hash_map::Entry, net::SocketAddr};
+use std::{collections::hash_map::Entry, net::SocketAddr, sync::Arc};
 
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
@@ -84,11 +84,12 @@ impl NetworkDomain {
         Ok(())
     }
 
-    fn identity(&self) -> CoreResult<&UserIdentity> {
+    fn identity(&self) -> CoreResult<Arc<UserIdentity>> {
         self.user_identity
             .as_ref()
             .ok_or(CoreError::NoUserIdentity)
             .inspect_err(|e| log::error!("Can't connect without identity: {e}"))
+            .cloned()
     }
 
     async fn connect_to(state: NetworkDomainSync, remote: SocketAddr) -> CoreResult<()> {
@@ -96,7 +97,7 @@ impl NetworkDomain {
         let connection = {
             let state_b = state.read().await;
             let user_identity = state_b.identity()?;
-            Connection::connect_to(remote, user_identity).await?
+            Connection::connect_to(remote, &user_identity).await?
         };
         Self::init_connection(state, remote, connection).await
     }
@@ -110,7 +111,7 @@ impl NetworkDomain {
         let connection = {
             let state_b = state.read().await;
             let user_identity = state_b.identity()?;
-            Connection::connect_from(stream, remote, user_identity).await?
+            Connection::connect_from(stream, remote, &user_identity).await?
         };
         Self::init_connection(state, remote, connection).await
     }

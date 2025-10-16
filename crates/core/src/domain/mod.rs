@@ -31,7 +31,7 @@ pub(crate) struct Channels {
 #[derive(Debug, Default)]
 pub struct NetworkDomain {
     pub(crate) active_connections: ActiveConnections,
-    pub(crate) user_identity: Option<UserIdentity>,
+    pub(crate) user_identity: Option<Arc<UserIdentity>>,
     pub(crate) listener: Option<TcpListener>,
     channels: Option<Channels>,
 }

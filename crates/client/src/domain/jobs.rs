@@ -98,7 +98,10 @@ impl ClientDomain {
         Ok(())
     }
 
-    pub(crate) async fn set_identity(&mut self, iden: Option<UserIdentity>) -> ClientResult<()> {
+    pub(crate) async fn set_identity(
+        &mut self,
+        iden: Option<Arc<UserIdentity>>,
+    ) -> ClientResult<()> {
         log::trace!("{}", current_function!());
         self.user_identity = iden.clone();
         self.net_command_channel()

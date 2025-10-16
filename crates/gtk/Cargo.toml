@@ -17,7 +17,6 @@ sremp-core.workspace = true
 sremp-client.workspace = true
 gtk = { version = "0.10", package = "gtk4"}
 chrono.workspace = true
-ed25519-dalek.workspace = true
 log.workspace = true
 env_logger = "0.11"
 tokio.workspace = true

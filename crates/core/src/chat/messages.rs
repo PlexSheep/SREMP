@@ -11,6 +11,7 @@ use ed25519_dalek::VerifyingKey;
 use serde::{Deserialize, Serialize};
 
 use crate::error::CoreResult;
+use crate::identity::ContactId;
 use crate::ser_helper::*;
 
 pub type MessageID = u32;
@@ -31,7 +32,7 @@ pub struct Message {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MessageMeta {
-    pub author_key: VerifyingKey,
+    pub author_id: ContactId,
     pub time_received: chrono::DateTime<chrono::Utc>,
 }
 
@@ -86,11 +87,11 @@ impl MessageFlags {
 }
 
 impl Message {
-    pub fn new(text: impl Display, time_received: DateTime<Utc>, author_key: VerifyingKey) -> Self {
+    pub fn new(text: impl Display, time_received: DateTime<Utc>, author_id: ContactId) -> Self {
         Self {
             text: text.to_string(),
             attachments: Default::default(),
-            meta: MessageMeta::new(time_received, author_key),
+            meta: MessageMeta::new(time_received, author_id),
             flags: Default::default(),
         }
     }
@@ -112,10 +113,10 @@ impl Message {
 }
 
 impl MessageMeta {
-    pub fn new(time_received: DateTime<Utc>, author_key: VerifyingKey) -> Self {
+    pub fn new(time_received: DateTime<Utc>, author_id: ContactId) -> Self {
         Self {
             time_received,
-            author_key,
+            author_id,
         }
     }
 }

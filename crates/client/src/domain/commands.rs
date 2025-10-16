@@ -1,4 +1,4 @@
-use std::{fmt::Display, net::SocketAddr};
+use std::{fmt::Display, net::SocketAddr, sync::Arc};
 
 use sremp_core::{
     chat::messages::SharedMessage,
@@ -8,7 +8,7 @@ use sremp_core::{
 #[derive(Debug, Clone)]
 #[allow(clippy::large_enum_variant)]
 pub enum UiCommand {
-    SetIdentity(Option<UserIdentity>),
+    SetIdentity(Option<Arc<UserIdentity>>),
     SendMessage(ContactId, SharedMessage),
     StartListener(SocketAddr),
     StopListener,

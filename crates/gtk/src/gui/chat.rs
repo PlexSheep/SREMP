@@ -30,12 +30,12 @@ impl MessageBubble {
             .orientation(gtk::Orientation::Horizontal)
             .build();
 
-        let author = match state.borrow().find_contact(&self.inner.meta().author_key) {
+        let author = match state.borrow().find_contact(&self.inner.meta().author_id) {
             Some(a) => a,
-            None => panic!("unknwon author: {:?}", self.meta().author_key.to_bytes()),
+            None => panic!("unknwon author: {:?}", self.meta().author_id),
         };
 
-        let w_lbl_author = label(author.identity.username());
+        let w_lbl_author = label(author.username());
         let w_lbl_time = label(self.meta().time_received);
         w_lbl_time.set_halign(gtk::Align::Start);
         w_lbl_author.set_halign(gtk::Align::Start);

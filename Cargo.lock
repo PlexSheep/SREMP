@@ -1526,7 +1526,6 @@ name = "sremp-client"
 version = "0.1.0"
 dependencies = [
  "async-channel",
- "ed25519-dalek",
  "log",
  "rmp-serde",
  "serde",
@@ -1559,7 +1558,6 @@ version = "0.1.0"
 dependencies = [
  "async-channel",
  "chrono",
- "ed25519-dalek",
  "env_logger",
  "gtk4",
  "log",

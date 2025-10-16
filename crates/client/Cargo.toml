@@ -17,7 +17,6 @@ serde.workspace = true
 log.workspace = true
 async-channel.workspace = true
 rmp-serde.workspace = true
-ed25519-dalek.workspace = true
 sremp-core.workspace = true
 thiserror.workspace = true
 

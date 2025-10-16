@@ -14,6 +14,7 @@ use sremp_core::{
     domain::{NetworkCommand, NetworkEvent},
     error::CoreError,
     identity::{ContactId, UserIdentity},
+    ser_helper::*,
 };
 
 use crate::error::ClientResult;
@@ -31,7 +32,8 @@ const JOB_ITERATION_INTERVAL_MS: u64 = 200;
 pub struct ClientDomain {
     pub(crate) known_identities: KnownIdentities,
     pub(crate) chats: Chats,
-    pub(crate) user_identity: Option<UserIdentity>,
+    #[serde(serialize_with = "ser_arc_opt", deserialize_with = "deser_arc_opt")]
+    pub(crate) user_identity: Option<Arc<UserIdentity>>,
     pub(crate) open_connections: HashMap<ContactId, SocketAddr>,
     #[serde(skip)]
     channels: Option<Channels>,

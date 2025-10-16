@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt::Display, net::SocketAddr};
+use std::{collections::HashMap, fmt::Display, net::SocketAddr, sync::Arc};
 
 use sremp_core::{
     chat::{Chat, messages::SharedMessage},
@@ -16,7 +16,7 @@ pub enum UiEvent {
     ConnectionFailed(SocketAddr, String),
     ListenerStarted(SocketAddr),
     ListenerStopped,
-    IdentitySet(Option<UserIdentity>),
+    IdentitySet(Option<Arc<UserIdentity>>),
     LoadInitialChats(HashMap<ContactId, Chat>),
     ChatLoaded(Chat),
     ChatNotFound(ContactId),
