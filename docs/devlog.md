@@ -14,6 +14,26 @@ project.
 Also, since I'm a night person, I will count sessions continuing into the next
 day as part of the previous one. It's just more convenient that way.
 
+## 2025-10-17 (plexsheep)
+
+### Progress
+
+- Refactored the gui a bit
+- First tofu trust dialog + sremp doesnt crash after connection established
+- The connected chat actually appears in the gui
+
+### Decisions
+
+- Purely functional gui isn't great. Having special widgets in structs is neat.
+- Start the listener on 33399 so that i dont always have to write a random
+  port. This should be a random port in the actual release.
+
+### Notes
+
+### Mood
+
+- A bit annoyed at GUI code but it does work
+
 ## 2025-10-16 (plexsheep)
 
 It's been a while since I last coded on SREMP. I wasn't really busy, more like
