@@ -31,12 +31,13 @@ pub(crate) fn dialog_connect(app: &gtk::Application, state: UiDomainSync) {
 
     let w_host_entry = gtk::Entry::builder()
         .placeholder_text("192.168.1.19")
+        .text("127.0.0.1")
         .hexpand(true)
         .build();
 
     let w_port_entry = gtk::Entry::builder()
-        .placeholder_text("51673")
-        .text("51673")
+        .placeholder_text("33399")
+        .text("33399")
         .build();
 
     let w_box_btn = gtk::Box::builder()
