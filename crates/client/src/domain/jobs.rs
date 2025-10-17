@@ -30,7 +30,10 @@ impl ClientDomain {
                     .await;
                 Ok(())
             }
-            UiCommand::SelectChat(cid) => Ok(self.send_ui_evt(UiEvent::OpenChat(cid)).await),
+            UiCommand::SelectChat(cid) => {
+                let _: () = self.send_ui_evt(UiEvent::OpenChat(cid)).await;
+                Ok(())
+            }
             UiCommand::TrustContact(cid, trust) => {
                 if let Some(contact) = self.known_identities.get(&cid) {
                     // replace the contact with the changed one
