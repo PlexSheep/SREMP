@@ -69,8 +69,8 @@ impl ChatList {
                     .build(),
             );
         } else {
-            for chat in self.chats.values() {
-                let w_chat_card = widget_chat_card(&self.app, &self.state, chat);
+            for (cid, chat) in self.chats.iter() {
+                let w_chat_card = widget_chat_card(&self.app, &self.state, cid, chat);
                 self.list.append(&w_chat_card);
             }
         }
@@ -107,7 +107,8 @@ impl ChatList {
 
 fn widget_chat_card(
     _app: &gtk::Application,
-    _state: &UiDomainSync,
+    state: &UiDomainSync,
+    cid: &ContactId,
     chat: &Chat,
 ) -> impl IsA<gtk::Widget> {
     let w_box = gtk::Box::builder()
@@ -118,7 +119,10 @@ fn widget_chat_card(
         .margin_end(GUI_SPACING_LARGE)
         .build();
 
-    w_box.append(&label("TODO: find a way to get the username here"));
+    // BUG: RACE CONDITION
+    //let contact = state.borrow().contacts[cid].clone();
+    //w_box.append(&label(contact.username()));
+    w_box.append(&label("TODO GET USERNAME"));
 
     gtk::Frame::builder()
         .margin_top(GUI_SPACING_MID)
