@@ -1,13 +1,13 @@
 use std::ops::Deref;
 
 use gtk::prelude::*;
+use sremp_client::domain::known_identities::SharedContact;
 use sremp_core::chat::messages::SharedMessage;
 
 use crate::GUI_SPACING_LARGE;
 use crate::GUI_SPACING_MID;
 use crate::GUI_SPACING_XLARGE;
 use crate::GUI_SPACING_XXXLARGE;
-use crate::domain::UiDomainSync;
 use crate::gui::label;
 
 #[derive(Debug, Clone)]
@@ -16,27 +16,13 @@ pub(super) struct MessageBubble {
 }
 
 impl MessageBubble {
-    pub(super) fn widget(
-        &self,
-        app: &gtk::Application,
-        state: UiDomainSync,
-    ) -> impl IsA<gtk::Widget> {
+    pub(super) fn widget(&self, author: &SharedContact) -> impl IsA<gtk::Widget> {
         let w_box = gtk::Box::builder()
             .orientation(gtk::Orientation::Vertical)
             .build();
         let w_meta_box = gtk::Box::builder()
             .orientation(gtk::Orientation::Horizontal)
             .build();
-
-        let author = match state
-            .borrow()
-            .contacts()
-            .get(&self.inner.meta().author_id)
-            .cloned()
-        {
-            Some(a) => a,
-            None => panic!("unknwon author: {:?}", self.meta().author_id),
-        };
 
         let w_lbl_author = label(author.username());
         let w_lbl_time = label(self.meta().time_received);
@@ -52,7 +38,7 @@ impl MessageBubble {
         w_meta_box.set_margin_start(GUI_SPACING_LARGE);
         w_meta_box.set_margin_end(GUI_SPACING_LARGE);
 
-        let w_content = self.widget_content(app, state.clone());
+        let w_content = self.widget_content();
         w_content.set_margin_top(GUI_SPACING_XXXLARGE);
         w_content.set_halign(gtk::Align::Start);
         w_content.set_margin_top(GUI_SPACING_MID);
@@ -72,12 +58,9 @@ impl MessageBubble {
             .build()
     }
 
-    fn widget_content(
-        &self,
-        _app: &gtk::Application,
-        _state: UiDomainSync,
-    ) -> impl IsA<gtk::Widget> {
-        gtk::Label::new(Some(&self.inner.text))
+    #[inline(always)]
+    fn widget_content(&self) -> impl IsA<gtk::Widget> {
+        label(&self.inner.text)
     }
 }
 

@@ -1,9 +1,10 @@
-use crate::gui::chats::ChatList;
+use crate::gui::{chat::ChatView, chats::ChatList};
 
 #[derive(Debug, Default)]
 pub(crate) struct TrackedWidgets {
     lbl_listener_status: Option<gtk::Label>,
     chat_list: Option<ChatList>,
+    chat_view: Option<ChatView>,
 }
 
 impl TrackedWidgets {
@@ -25,5 +26,17 @@ impl TrackedWidgets {
 
     pub(crate) fn chat_list_mut(&mut self) -> &mut Option<ChatList> {
         &mut self.chat_list
+    }
+
+    pub(crate) fn chat_view(&self) -> Option<&ChatView> {
+        self.chat_view.as_ref()
+    }
+
+    pub(crate) fn chat_view_mut(&mut self) -> &mut Option<ChatView> {
+        &mut self.chat_view
+    }
+
+    pub(crate) fn set_chat_view(&mut self, chat_view: Option<ChatView>) {
+        self.chat_view = chat_view;
     }
 }

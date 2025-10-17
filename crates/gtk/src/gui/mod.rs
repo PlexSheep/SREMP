@@ -30,7 +30,12 @@ pub(crate) fn start_application(app: &gtk::Application, state: UiDomainSync) {
         .tracked_widgets
         .set_chat_list(Some(w_chat_list));
 
-    w_window_content.append(&widget_viewport_chat(app, state.clone()));
+    let w_chat_view = ChatView::new(None, None);
+    w_window_content.append(&w_chat_view.widget);
+    state
+        .borrow_mut()
+        .tracked_widgets
+        .set_chat_view(Some(w_chat_view));
 
     let w_global_frame = gtk::Frame::builder()
         .child(&w_window_content)

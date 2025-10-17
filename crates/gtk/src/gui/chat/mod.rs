@@ -1,7 +1,7 @@
 use gtk::prelude::*;
+use sremp_client::domain::known_identities::SharedContact;
+use sremp_core::chat::Chat;
 
-use crate::GUI_SPACING_MID;
-use crate::domain::UiDomainSync;
 use crate::gui::label;
 
 mod bubble;
@@ -9,44 +9,73 @@ use bubble::*;
 mod input;
 use input::*;
 
-pub(crate) fn widget_viewport_chat(
-    app: &gtk::Application,
-    state: UiDomainSync,
-) -> impl IsA<gtk::Widget> {
-    let vp_chat = gtk::Box::builder()
-        .orientation(gtk::Orientation::Vertical)
-        .build();
+#[derive(Debug)]
+pub(crate) struct ChatView {
+    pub(crate) widget: gtk::Box,
+    list: gtk::ListBox,
+    scroller: gtk::ScrolledWindow,
+    contact: Option<SharedContact>,
+    chat: Option<Chat>,
+}
 
-    // Create a `ListBox` and add labels with integers from 0 to 100
-    let w_list_box = gtk::ListBox::builder()
-        .vexpand(true)
-        .selection_mode(gtk::SelectionMode::None)
-        .show_separators(false)
-        .build();
-
-    match state.borrow().current_chat() {
-        Some(c) => {
-            for message in c.messages() {
-                let message_bubble = MessageBubble::from(message);
-                w_list_box.append(&message_bubble.widget(app, state.clone()));
-            }
-        }
-        None => {
-            w_list_box.append(&label("No chat selected"));
-        }
+impl ChatView {
+    pub(crate) fn new(contact: Option<SharedContact>, chat: Option<Chat>) -> Self {
+        let mut this = Self {
+            widget: Default::default(),
+            list: Default::default(),
+            scroller: Default::default(),
+            contact,
+            chat,
+        };
+        this.regenerate();
+        this
     }
 
-    let w_chat_interface = gtk::ScrolledWindow::builder()
-        .hscrollbar_policy(gtk::PolicyType::Never) // Disable horizontal scrolling
-        .min_content_height(400)
-        .min_content_width(400)
-        .child(&w_list_box)
-        .build();
+    pub(crate) fn clear(&mut self) {
+        self.chat = Default::default();
+        self.contact = None;
+        self.regenerate();
+    }
 
-    // TODO: scroll to the bottom
+    pub(crate) fn set_chat(&mut self, chat: Option<Chat>) {
+        self.chat = chat;
+        self.regenerate();
+    }
 
-    vp_chat.append(&w_chat_interface);
-    vp_chat.append(&widget_input_area(app, state.clone()));
+    fn regenerate(&mut self) {
+        self.list = gtk::ListBox::builder()
+            .vexpand(true)
+            .selection_mode(gtk::SelectionMode::None)
+            .show_separators(false)
+            .build();
 
-    vp_chat
+        match &self.chat {
+            Some(c) if self.contact.is_some() => {
+                let contact = self.contact.as_ref().unwrap();
+                for message in c.messages() {
+                    let message_bubble = MessageBubble::from(message);
+                    self.list.append(&message_bubble.widget(contact));
+                }
+            }
+            None => {
+                self.list.append(&label("\n\n\nNo chat selected\n\n\n"));
+            }
+            other => panic!("Inconsistent chat view state: has chat but no contact: {other:#?}"),
+        }
+
+        self.scroller = gtk::ScrolledWindow::builder()
+            .hscrollbar_policy(gtk::PolicyType::Never) // Disable horizontal scrolling
+            .min_content_height(400)
+            .min_content_width(400)
+            .child(&self.list)
+            .build();
+
+        self.widget = gtk::Box::builder()
+            .orientation(gtk::Orientation::Vertical)
+            .build();
+        // TODO: scroll to the bottom
+
+        self.widget.append(&self.scroller);
+        self.widget.append(&widget_input_area());
+    }
 }

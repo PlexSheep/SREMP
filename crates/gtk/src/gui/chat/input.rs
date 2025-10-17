@@ -3,10 +3,7 @@ use crate::domain::UiDomainSync;
 
 use gtk::prelude::*;
 
-pub(super) fn widget_input_area(
-    app: &gtk::Application,
-    state: UiDomainSync,
-) -> impl IsA<gtk::Widget> {
+pub(super) fn widget_input_area() -> impl IsA<gtk::Widget> {
     let w_frame = gtk::Frame::builder()
         .margin_top(GUI_SPACING_MID)
         .margin_bottom(GUI_SPACING_MID)
