@@ -1,4 +1,4 @@
-use std::{collections::HashMap, ops::Deref, rc::Rc, sync::Arc};
+use std::{ops::Deref, rc::Rc, sync::Arc};
 
 use async_channel::{Receiver, Sender};
 use tokio::sync::RwLock;
@@ -97,6 +97,11 @@ impl UiDomain {
     }
 
     #[inline]
+    pub(crate) fn chats_mut(&mut self) -> Option<&mut Chats> {
+        Some(self.tracked_widgets.chat_list_mut()?.chats_mut())
+    }
+
+    #[inline]
     fn chat_view(&self) -> &ChatView {
         self.tracked_widgets
             .chat_view()
@@ -116,7 +121,6 @@ impl UiDomain {
     fn chat_list(&self) -> &ChatList {
         self.tracked_widgets
             .chat_list()
-            .as_ref()
             .expect("could not get chat list")
     }
 
@@ -124,13 +128,23 @@ impl UiDomain {
     fn chat_list_mut(&mut self) -> &mut ChatList {
         self.tracked_widgets
             .chat_list_mut()
-            .as_mut()
             .expect("could not get chat list")
     }
 
-    #[inline]
-    pub(crate) fn set_selected_chat(&mut self, chat: Option<ContactId>) {
-        self.chat_list_mut().set_selected_chat(chat);
+    pub(crate) fn set_selected_chat(&mut self, chat_id: Option<ContactId>) {
+        self.chat_list_mut().set_selected_chat(chat_id.clone());
+        if let Some(cid) = chat_id {
+            let chat = self
+                .chats_mut()
+                .as_mut()
+                .expect("could not get chats")
+                .entry(cid)
+                .or_default()
+                .clone();
+            self.chat_view_mut().set_chat(Some(chat));
+        } else {
+            self.chat_view_mut().set_chat(None);
+        }
     }
 
     #[inline]

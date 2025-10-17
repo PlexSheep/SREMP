@@ -3,13 +3,12 @@
 #![deny(clippy::await_holding_refcell_ref)]
 #![deny(clippy::await_holding_lock)]
 
-use log::trace;
 use sremp_client::domain::UiEvent;
 use sremp_core::current_function;
 
 use crate::{
     domain::{UiDomain, UiDomainSync, listen::ListenerStatus},
-    gui::{identity::show_identity_created_success, tofu::show_tofu_dialog},
+    gui::tofu::show_tofu_dialog,
 };
 
 use gtk::glib;
@@ -28,7 +27,7 @@ async fn event_processor(state: UiDomainSync) {
             let state_b = state.borrow();
             if let Ok(event) = state_b.event_channel.try_recv() {
                 drop(state_b);
-                log::info!("Processing network event: {event}");
+                log::info!("Processing application event: {event}");
 
                 match event {
                     UiEvent::ListenerStarted(addr) => {
@@ -62,6 +61,9 @@ async fn event_processor(state: UiDomainSync) {
                         // If not, disconnect.
                         // This should not block processing of UiEvents, i think?
                         show_tofu_dialog(state.clone(), contact, socket);
+                    }
+                    UiEvent::OpenChat(cid) => {
+                        state.borrow_mut().set_selected_chat(Some(cid));
                     }
                     other => {
                         log::warn!("Received unimplemented Ui event: {other}")

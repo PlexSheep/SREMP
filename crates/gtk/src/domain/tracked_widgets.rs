@@ -24,8 +24,8 @@ impl TrackedWidgets {
         self.chat_list = chat_list;
     }
 
-    pub(crate) fn chat_list_mut(&mut self) -> &mut Option<ChatList> {
-        &mut self.chat_list
+    pub(crate) fn chat_list_mut(&mut self) -> Option<&mut ChatList> {
+        self.chat_list.as_mut()
     }
 
     pub(crate) fn chat_view(&self) -> Option<&ChatView> {

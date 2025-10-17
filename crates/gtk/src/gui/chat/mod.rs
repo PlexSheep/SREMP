@@ -2,7 +2,7 @@ use gtk::prelude::*;
 use sremp_client::domain::known_identities::{KnownIdentities, SharedContact};
 use sremp_core::chat::Chat;
 
-use crate::{domain::UiDomainSync, gui::label};
+use crate::gui::{label, widget_detailbar};
 
 mod bubble;
 use bubble::*;
@@ -13,6 +13,7 @@ use input::*;
 pub(crate) struct ChatView {
     pub(crate) widget: gtk::Box,
     list: gtk::ListBox,
+    detailbar: gtk::Frame,
     scroller: gtk::ScrolledWindow,
     chat: Option<Chat>,
     contacts: KnownIdentities,
@@ -24,6 +25,7 @@ impl ChatView {
             widget: Default::default(),
             list: Default::default(),
             scroller: Default::default(),
+            detailbar: Default::default(),
             chat,
             contacts,
         };
@@ -58,6 +60,8 @@ impl ChatView {
 
         match &self.chat {
             Some(c) => {
+                self.detailbar = widget_detailbar("Chat");
+
                 for message in c.messages() {
                     let contact = &self.contacts[&message.meta().author_id];
                     let message_bubble = MessageBubble::from(message);
@@ -65,7 +69,7 @@ impl ChatView {
                 }
             }
             None => {
-                self.list.append(&label("\n\n\nNo chat selected\n\n\n"));
+                self.detailbar = widget_detailbar("No chat selected");
             }
         }
 
@@ -81,6 +85,7 @@ impl ChatView {
             .build();
         // TODO: scroll to the bottom
 
+        self.widget.append(&self.detailbar);
         self.widget.append(&self.scroller);
         self.widget.append(&widget_input_area());
     }

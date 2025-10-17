@@ -3,8 +3,8 @@ use std::fmt::Display;
 use gtk::prelude::*;
 use sremp_client::domain::chats::Chats;
 
-use crate::GUI_SPACING_XXLARGE;
 use crate::domain::UiDomainSync;
+use crate::{GUI_SPACING_LARGE, GUI_SPACING_MID, GUI_SPACING_XXLARGE};
 
 pub(crate) mod chat;
 pub(crate) mod chats;
@@ -23,7 +23,7 @@ pub(crate) fn start_application(app: &gtk::Application, state: UiDomainSync) {
         .orientation(gtk::Orientation::Horizontal)
         .build();
 
-    let w_chat_list = ChatList::new(app, Default::default(), Chats::default());
+    let w_chat_list = ChatList::new(app, Default::default(), Chats::default(), state.clone());
     w_window_content.append(&w_chat_list.widget);
     state
         .borrow_mut()
@@ -62,4 +62,20 @@ pub(crate) fn start_application(app: &gtk::Application, state: UiDomainSync) {
 #[inline]
 pub(crate) fn label(content: impl Display) -> gtk::Label {
     gtk::Label::new(Some(&content.to_string()))
+}
+
+fn widget_detailbar(content: impl Display) -> gtk::Frame {
+    let lbl = label(content);
+    lbl.set_margin_top(GUI_SPACING_LARGE);
+    lbl.set_margin_bottom(GUI_SPACING_LARGE);
+    lbl.set_margin_start(GUI_SPACING_MID);
+    lbl.set_margin_end(GUI_SPACING_MID);
+
+    gtk::Frame::builder()
+        .margin_top(GUI_SPACING_XXLARGE)
+        .margin_bottom(GUI_SPACING_XXLARGE)
+        .margin_start(GUI_SPACING_LARGE)
+        .margin_end(GUI_SPACING_LARGE)
+        .child(&lbl)
+        .build()
 }

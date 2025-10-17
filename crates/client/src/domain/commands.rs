@@ -11,6 +11,7 @@ pub enum UiCommand {
     SetIdentity(Option<Arc<UserIdentity>>),
     SendMessage(ContactId, SharedMessage),
     StartChat(ContactId),
+    SelectChat(ContactId),
     TrustContact(ContactId, Trust),
     StartListener(SocketAddr),
     StopListener,
@@ -27,6 +28,7 @@ impl Display for UiCommand {
                 Self::Connect(addr) => format!("Connect to {addr}"),
                 Self::Disconnect(addr) => format!("Disconnect from {addr}"),
                 Self::StartChat(id) => format!("Create new chat with {id}"),
+                Self::SelectChat(id) => format!("Select chat with {id}"),
                 Self::SendMessage(id, _msg) => format!("Send Message to {id}"),
                 Self::TrustContact(id, trust) => format!("Set trust of {id} to {trust}"),
                 Self::StartListener(addr) =>

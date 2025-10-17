@@ -1,11 +1,14 @@
+use std::fmt::Display;
+
 use gtk::prelude::*;
+use sremp_client::domain::UiCommand;
 use sremp_client::domain::chats::Chats;
 use sremp_client::domain::known_identities::{KnownIdentities, SharedContact};
 use sremp_core::chat::Chat;
 use sremp_core::identity::ContactId;
 
 use crate::domain::UiDomainSync;
-use crate::gui::label;
+use crate::gui::{label, widget_detailbar};
 use crate::{GUI_SPACING_LARGE, GUI_SPACING_MID};
 
 #[derive(Debug)]
@@ -13,13 +16,21 @@ pub(crate) struct ChatList {
     pub(crate) widget: gtk::Frame,
     chats: Chats,
     list: gtk::ListBox,
+    inner_box: gtk::Box,
+    detailbar: gtk::Frame,
     selected: Option<ContactId>,
     app: gtk::Application,
     contacts: KnownIdentities,
+    state: UiDomainSync,
 }
 
 impl ChatList {
-    pub(crate) fn new(app: &gtk::Application, contacts: KnownIdentities, chats: Chats) -> Self {
+    pub(crate) fn new(
+        app: &gtk::Application,
+        contacts: KnownIdentities,
+        chats: Chats,
+        state: UiDomainSync,
+    ) -> Self {
         let widget = gtk::Frame::builder()
             .margin_top(GUI_SPACING_LARGE)
             .margin_bottom(GUI_SPACING_LARGE)
@@ -30,10 +41,13 @@ impl ChatList {
         let mut this = Self {
             widget,
             list: Default::default(),
+            detailbar: Default::default(),
+            inner_box: Default::default(),
             selected: None,
             app: app.clone(),
             contacts,
             chats,
+            state,
         };
 
         this.regenerate();
@@ -47,9 +61,15 @@ impl ChatList {
             .selection_mode(gtk::SelectionMode::None)
             .build();
 
-        self.widget.set_child(Some(&self.list));
+        if let Some(chat_cid) = &self.selected {
+            self.detailbar = widget_detailbar(chat_cid);
 
-        if self.chats.is_empty() {
+            for (cid, chat) in self.chats.iter() {
+                let contact = self.contacts[cid].clone();
+                let w_chat_card = widget_chat_card(&self.app, self.state.clone(), contact, chat);
+                self.list.append(&w_chat_card);
+            }
+        } else {
             let w_box = gtk::Box::builder()
                 .orientation(gtk::Orientation::Vertical)
                 .margin_top(GUI_SPACING_LARGE)
@@ -58,7 +78,7 @@ impl ChatList {
                 .margin_end(GUI_SPACING_LARGE)
                 .build();
 
-            w_box.append(&label("No chats yet"));
+            self.detailbar = widget_detailbar("No chats yet");
 
             self.list.append(
                 &gtk::Frame::builder()
@@ -69,13 +89,14 @@ impl ChatList {
                     .child(&w_box)
                     .build(),
             );
-        } else {
-            for (cid, chat) in self.chats.iter() {
-                let contact = self.contacts[cid].clone();
-                let w_chat_card = widget_chat_card(&self.app, contact, chat);
-                self.list.append(&w_chat_card);
-            }
         }
+        self.inner_box = gtk::Box::builder()
+            .orientation(gtk::Orientation::Vertical)
+            .build();
+        self.inner_box.append(&self.detailbar);
+        self.inner_box.append(&self.list);
+
+        self.widget.set_child(Some(&self.inner_box));
     }
 
     #[inline]
@@ -93,6 +114,11 @@ impl ChatList {
     #[inline(always)]
     pub(crate) fn chats(&self) -> &Chats {
         &self.chats
+    }
+
+    #[inline(always)]
+    pub(crate) fn chats_mut(&mut self) -> &mut Chats {
+        &mut self.chats
     }
 
     #[inline(always)]
@@ -124,6 +150,7 @@ impl ChatList {
 
 fn widget_chat_card(
     _app: &gtk::Application,
+    state: UiDomainSync,
     contact: SharedContact,
     chat: &Chat,
 ) -> impl IsA<gtk::Widget> {
@@ -137,11 +164,21 @@ fn widget_chat_card(
 
     w_box.append(&label(contact.username()));
 
-    gtk::Frame::builder()
+    let on_click = gtk::GestureClick::new();
+    on_click.connect_released(move |_gesture, _press, _x, _y| {
+        log::debug!("Chat card of {} clicked!", contact.id());
+        state.borrow().send_cmd(UiCommand::SelectChat(contact.id()));
+    });
+
+    let frame = gtk::Frame::builder()
         .margin_top(GUI_SPACING_MID)
         .margin_bottom(GUI_SPACING_MID)
         .margin_start(GUI_SPACING_MID)
         .margin_end(GUI_SPACING_MID)
         .child(&w_box)
-        .build()
+        .build();
+
+    frame.add_controller(on_click);
+
+    frame
 }

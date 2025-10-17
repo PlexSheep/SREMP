@@ -21,6 +21,7 @@ pub enum UiEvent {
     IdentitySet(Option<Arc<UserIdentity>>),
     LoadedChats(Chats),
     SetKnownIdentities(KnownIdentities),
+    OpenChat(ContactId),
 }
 
 impl Display for UiEvent {
@@ -56,6 +57,7 @@ impl Display for UiEvent {
                 Self::LoadedChats(chats) => format!("Loaded {} chats", chats.len()),
                 Self::SetKnownIdentities(kid) =>
                     format!("Set known identities for UI ({} identities)", kid.len()),
+                Self::OpenChat(cid) => format!("Open chat for contact {cid}"),
             }
         )
     }
