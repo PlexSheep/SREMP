@@ -58,7 +58,7 @@ pub(crate) fn show_tofu_dialog(
                     .borrow_mut()
                     .set_selected_chat(Some(contact_id.clone()));
             }
-            gtk::ResponseType::Reject => {
+            gtk::ResponseType::Reject | gtk::ResponseType::DeleteEvent => {
                 // User chose to reject - send command to block and disconnect
                 state
                     .borrow()
