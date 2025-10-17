@@ -26,8 +26,7 @@ impl Display for NetworkEvent {
             match self {
                 Self::ConnectionEstablished(addr, iden) =>
                     format!("Connection established with {addr} ({})", iden.id()),
-                Self::ConnectionLost(addr, key) =>
-                    format!("Peer {addr} ({key}) has disconnected"),
+                Self::ConnectionLost(addr, key) => format!("Peer {addr} ({key}) has disconnected"),
                 Self::IncomingMessage(addr, key, _msg) =>
                     format!("Message received from {addr} ({key})"),
                 Self::MessageSent(addr, key, _msg) => format!("Message sent to {addr} ({key})"),

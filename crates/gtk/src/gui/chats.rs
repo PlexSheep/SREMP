@@ -62,7 +62,7 @@ impl ChatList {
             .build();
 
         if let Some(chat_cid) = &self.selected {
-            self.detailbar = widget_detailbar(chat_cid);
+            self.detailbar = widget_detailbar(format!("{} Chats", self.chats().len()));
 
             for (cid, chat) in self.chats.iter() {
                 let contact = self.contacts[cid].clone();
