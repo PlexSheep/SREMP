@@ -11,7 +11,7 @@
 | Component                                                         | API-Documentation                                    | Description                                | Version                                                        |
 | ----------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------ | -------------------------------------------------------------- |
 | [📦 **`core`** ](https://crates.io/crates/sremp-core)             | [📖 Documentation](https://docs.rs/sremp-core)       | backend, networking and cryptography       | ![Crates.io](https://img.shields.io/crates/v/sremp-core)       |
-| [📦 **`client`** ](https://crates.io/crates/sremp-client)         | [📖 Documentation](https://docs.rs/sremp-client)     | application layer ussed in frontends       | ![Crates.io](https://img.shields.io/crates/v/sremp-client)     |
+| [📦 **`client`** ](https://crates.io/crates/sremp-client)         | [📖 Documentation](https://docs.rs/sremp-client)     | application layer used in frontends        | ![Crates.io](https://img.shields.io/crates/v/sremp-client)     |
 | [📦 **`gtk`**](https://crates.io/crates/sremp-gtk)                | [📖 Documentation](https://docs.rs/sremp-gtk)        | GTK4-based desktop client                  | ![Crates.io](https://img.shields.io/crates/v/sremp-gtk)        |
 | [📦 **`relay`** ](https://crates.io/crates/sremp-relay)           | [📖 Documentation](https://docs.rs/sremp-relay)      | temporary message storage, message routing | ![Crates.io](https://img.shields.io/crates/v/sremp-relay)      |
 | [📦 **`rendezvous`** ](https://crates.io/crates/sremp-rendezvous) | [📖 Documentation](https://docs.rs/sremp-rendezvous) | Public list of contacts                    | ![Crates.io](https://img.shields.io/crates/v/sremp-rendezvous) |
@@ -113,7 +113,7 @@ functionality are still being implemented, and the project is not yet ready
 for real use.
 
 Look at the [DevLog](./docs/devlog.md) for more up to date information. I try to
-write down my thoughts and descisions about `SREMP` there.
+write down my thoughts and decisions about `SREMP` there.
 
 ## 🛠️ Development
 
