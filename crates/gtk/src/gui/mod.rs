@@ -30,7 +30,7 @@ pub(crate) fn start_application(app: &gtk::Application, state: UiDomainSync) {
         .tracked_widgets
         .set_chat_list(Some(w_chat_list));
 
-    let w_chat_view = ChatView::new(None, None);
+    let w_chat_view = ChatView::new(Default::default(), None);
     w_window_content.append(&w_chat_view.widget);
     state
         .borrow_mut()

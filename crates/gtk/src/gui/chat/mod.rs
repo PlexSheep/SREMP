@@ -1,8 +1,8 @@
 use gtk::prelude::*;
-use sremp_client::domain::known_identities::SharedContact;
+use sremp_client::domain::known_identities::{KnownIdentities, SharedContact};
 use sremp_core::chat::Chat;
 
-use crate::gui::label;
+use crate::{domain::UiDomainSync, gui::label};
 
 mod bubble;
 use bubble::*;
@@ -14,29 +14,36 @@ pub(crate) struct ChatView {
     pub(crate) widget: gtk::Box,
     list: gtk::ListBox,
     scroller: gtk::ScrolledWindow,
-    contact: Option<SharedContact>,
     chat: Option<Chat>,
+    contacts: KnownIdentities,
 }
 
 impl ChatView {
-    pub(crate) fn new(contact: Option<SharedContact>, chat: Option<Chat>) -> Self {
+    pub(crate) fn new(contacts: KnownIdentities, chat: Option<Chat>) -> Self {
         let mut this = Self {
             widget: Default::default(),
             list: Default::default(),
             scroller: Default::default(),
-            contact,
             chat,
+            contacts,
         };
         this.regenerate();
         this
     }
 
+    #[inline]
     pub(crate) fn clear(&mut self) {
         self.chat = Default::default();
-        self.contact = None;
         self.regenerate();
     }
 
+    #[inline]
+    pub(crate) fn set_contacts(&mut self, contacts: KnownIdentities) {
+        self.contacts = contacts;
+        self.regenerate();
+    }
+
+    #[inline]
     pub(crate) fn set_chat(&mut self, chat: Option<Chat>) {
         self.chat = chat;
         self.regenerate();
@@ -50,9 +57,9 @@ impl ChatView {
             .build();
 
         match &self.chat {
-            Some(c) if self.contact.is_some() => {
-                let contact = self.contact.as_ref().unwrap();
+            Some(c) => {
                 for message in c.messages() {
+                    let contact = &self.contacts[&message.meta().author_id];
                     let message_bubble = MessageBubble::from(message);
                     self.list.append(&message_bubble.widget(contact));
                 }
@@ -60,7 +67,6 @@ impl ChatView {
             None => {
                 self.list.append(&label("\n\n\nNo chat selected\n\n\n"));
             }
-            other => panic!("Inconsistent chat view state: has chat but no contact: {other:#?}"),
         }
 
         self.scroller = gtk::ScrolledWindow::builder()

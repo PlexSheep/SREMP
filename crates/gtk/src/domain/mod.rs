@@ -17,7 +17,7 @@ use tracked_widgets::TrackedWidgets;
 use crate::{
     RUNTIME,
     domain::listen::ListenerStatus,
-    gui::{chats::ChatList, identity::show_identity_created_success},
+    gui::{chat::ChatView, chats::ChatList, identity::show_identity_created_success},
 };
 
 #[derive(Debug)]
@@ -97,6 +97,22 @@ impl UiDomain {
     }
 
     #[inline]
+    fn chat_view(&self) -> &ChatView {
+        self.tracked_widgets
+            .chat_view()
+            .as_ref()
+            .expect("could not get chat view")
+    }
+
+    #[inline]
+    fn chat_view_mut(&mut self) -> &mut ChatView {
+        self.tracked_widgets
+            .chat_view_mut()
+            .as_mut()
+            .expect("could not get chat view")
+    }
+
+    #[inline]
     fn chat_list(&self) -> &ChatList {
         self.tracked_widgets
             .chat_list()
@@ -114,7 +130,7 @@ impl UiDomain {
 
     #[inline]
     pub(crate) fn set_selected_chat(&mut self, chat: Option<ContactId>) {
-        self.chat_list_mut().set_selected_chat(chat)
+        self.chat_list_mut().set_selected_chat(chat);
     }
 
     #[inline]
@@ -124,7 +140,8 @@ impl UiDomain {
 
     #[inline]
     pub(crate) fn set_contacts(&mut self, contacts: KnownIdentities) {
-        self.chat_list_mut().set_contacts(contacts);
+        self.chat_list_mut().set_contacts(contacts.clone());
+        self.chat_view_mut().set_contacts(contacts);
     }
 
     #[inline]
