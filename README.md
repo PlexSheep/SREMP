@@ -112,6 +112,9 @@ technical details of how `SREMP` should work in theory.
 functionality are still being implemented, and the project is not yet ready
 for real use.
 
+Look at the [DevLog](./docs/devlog.md) for more up to date information. I try to
+write down my thoughts and descisions about `SREMP` there.
+
 ## 🛠️ Development
 
 ### Prerequisites
