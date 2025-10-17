@@ -17,6 +17,13 @@ pub fn version() -> String {
 }
 
 #[macro_export]
+macro_rules! trace_current_function {
+    () => {{
+        log::trace!("{}", current_function!());
+    }};
+}
+
+#[macro_export]
 macro_rules! current_function {
     () => {{
         fn f() {}

@@ -132,6 +132,7 @@ impl UiDomain {
     }
 
     pub(crate) fn set_selected_chat(&mut self, chat_id: Option<ContactId>) {
+        log::trace!("Opening chat: {chat_id:?}");
         self.chat_list_mut().set_selected_chat(chat_id.clone());
         if let Some(cid) = chat_id {
             let chat = self

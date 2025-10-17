@@ -1,6 +1,6 @@
 use gtk::prelude::*;
 use sremp_client::domain::known_identities::{KnownIdentities, SharedContact};
-use sremp_core::chat::Chat;
+use sremp_core::{chat::Chat, current_function, trace_current_function};
 
 use crate::gui::{label, widget_detailbar};
 
@@ -47,11 +47,14 @@ impl ChatView {
 
     #[inline]
     pub(crate) fn set_chat(&mut self, chat: Option<Chat>) {
+        trace_current_function!();
         self.chat = chat;
         self.regenerate();
     }
 
     fn regenerate(&mut self) {
+        trace_current_function!();
+        log::trace!("chat of chat view is: {:#?}", self.chat);
         self.list = gtk::ListBox::builder()
             .vexpand(true)
             .selection_mode(gtk::SelectionMode::None)
@@ -60,6 +63,7 @@ impl ChatView {
 
         match &self.chat {
             Some(c) => {
+                log::trace!("Chat is some");
                 self.detailbar = widget_detailbar("Chat");
 
                 for message in c.messages() {
@@ -69,6 +73,7 @@ impl ChatView {
                 }
             }
             None => {
+                log::trace!("Chat is none");
                 self.detailbar = widget_detailbar("No chat selected");
             }
         }
