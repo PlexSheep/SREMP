@@ -1,8 +1,8 @@
 use gtk::prelude::*;
-use sremp_client::domain::known_identities::{KnownIdentities, SharedContact};
-use sremp_core::{chat::Chat, current_function, trace_current_function};
+use sremp_client::domain::known_identities::KnownIdentities;
+use sremp_core::{chat::Chat, trace_current_function};
 
-use crate::gui::{label, widget_detailbar};
+use crate::gui::widget_detailbar;
 
 mod bubble;
 use bubble::*;
