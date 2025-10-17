@@ -27,10 +27,10 @@ impl Display for NetworkEvent {
                 Self::ConnectionEstablished(addr, iden) =>
                     format!("Connection established with {addr} ({})", iden.id()),
                 Self::ConnectionLost(addr, key) =>
-                    format!("Peer {addr} ({}) has disconnected", key),
+                    format!("Peer {addr} ({key}) has disconnected"),
                 Self::IncomingMessage(addr, key, _msg) =>
-                    format!("Message received from {addr} ({})", key),
-                Self::MessageSent(addr, key, _msg) => format!("Message sent to {addr} ({})", key),
+                    format!("Message received from {addr} ({key})"),
+                Self::MessageSent(addr, key, _msg) => format!("Message sent to {addr} ({key})"),
                 Self::ConnectionFailed(addr, reason) =>
                     format!("Connection to {addr} attempt was aborted: {reason}"),
                 Self::ListenerStarted(addr) =>

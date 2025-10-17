@@ -22,7 +22,7 @@ impl Display for NetworkCommand {
             match self {
                 Self::Connect(addr) => format!("Connect to {addr}"),
                 Self::Disconnect(addr) => format!("Disconnect from {addr}"),
-                Self::SendMessage(addr, id, _msg) => format!("Send Message to {addr}: {}", id),
+                Self::SendMessage(addr, id, _msg) => format!("Send Message to {addr}: {id}"),
                 Self::StartListener(addr) =>
                     format!("Start listening for incoming connection on {addr}"),
                 Self::StopListener => "Stop listening for incoming connections".to_string(),
