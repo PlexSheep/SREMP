@@ -5,6 +5,8 @@ use sremp_core::{
     identity::{ContactId, UserIdentity},
 };
 
+use crate::domain::known_identities::KnownIdentities;
+
 #[derive(Debug, Clone)]
 #[allow(clippy::large_enum_variant)]
 pub enum UiEvent {
@@ -20,6 +22,7 @@ pub enum UiEvent {
     LoadInitialChats(HashMap<ContactId, Chat>),
     ChatLoaded(Chat),
     ChatNotFound(ContactId),
+    SetKnownIdentities(KnownIdentities),
 }
 
 impl Display for UiEvent {
@@ -58,6 +61,8 @@ impl Display for UiEvent {
                 ),
                 Self::LoadInitialChats(chats) => format!("Loaded {} chats", chats.len()),
                 Self::ChatNotFound(id) => format!("Chat with id {id} does not exist"),
+                Self::SetKnownIdentities(kid) =>
+                    format!("Set known identities for UI ({} identities)", kid.len()),
             }
         )
     }
