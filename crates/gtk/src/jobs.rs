@@ -46,6 +46,22 @@ async fn event_processor(state: UiDomainSync) {
                         // NOTE: Deadlock if the lock is still held above
                         state.borrow_mut().apply_user_identity(iden.clone());
                     }
+                    UiEvent::LoadedChats(chats) => {
+                        if let Some(cl) = state.borrow_mut().tracked_widgets.chat_list_mut() {
+                            cl.replace_chats(chats);
+                        }
+                    }
+                    UiEvent::SetKnownIdentities(contacts) => {
+                        state.borrow_mut().contacts = contacts;
+                    }
+                    UiEvent::ConnectionEstablished(socket, cid) => {
+                        let contact = state.borrow().contacts[&cid];
+                        // TODO: open TOFU window and let the user choose if they trust the
+                        // identity.
+                        // If so, create a new chat with the peer.
+                        // If not, disconnect.
+                        // This should not block processing of UiEvents, i think?
+                    }
                     other => {
                         log::warn!("Received unimplemented Ui event: {other}")
                     }

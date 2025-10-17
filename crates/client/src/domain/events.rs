@@ -5,7 +5,7 @@ use sremp_core::{
     identity::{ContactId, UserIdentity},
 };
 
-use crate::domain::known_identities::KnownIdentities;
+use crate::domain::{chats::Chats, known_identities::KnownIdentities};
 
 #[derive(Debug, Clone)]
 #[allow(clippy::large_enum_variant)]
@@ -19,9 +19,7 @@ pub enum UiEvent {
     ListenerStarted(SocketAddr),
     ListenerStopped,
     IdentitySet(Option<Arc<UserIdentity>>),
-    LoadInitialChats(HashMap<ContactId, Chat>),
-    ChatLoaded(Chat),
-    ChatNotFound(ContactId),
+    LoadedChats(Chats),
     SetKnownIdentities(KnownIdentities),
 }
 
@@ -55,12 +53,7 @@ impl Display for UiEvent {
                         "working copy of user identity was set to nothing".to_string()
                     }
                 }
-                Self::ChatLoaded(chat) => format!(
-                    "Chat was loaded (last msg at {:?})",
-                    chat.messages().last().map(|m| m.meta().time_received)
-                ),
-                Self::LoadInitialChats(chats) => format!("Loaded {} chats", chats.len()),
-                Self::ChatNotFound(id) => format!("Chat with id {id} does not exist"),
+                Self::LoadedChats(chats) => format!("Loaded {} chats", chats.len()),
                 Self::SetKnownIdentities(kid) =>
                     format!("Set known identities for UI ({} identities)", kid.len()),
             }

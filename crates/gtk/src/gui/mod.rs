@@ -1,6 +1,7 @@
 use std::fmt::Display;
 
 use gtk::prelude::*;
+use sremp_client::domain::chats::Chats;
 
 use crate::GUI_SPACING_XXLARGE;
 use crate::domain::UiDomainSync;
@@ -21,7 +22,13 @@ pub(crate) fn start_application(app: &gtk::Application, state: UiDomainSync) {
         .orientation(gtk::Orientation::Horizontal)
         .build();
 
-    w_window_content.append(&widget_chats_list(app, state.clone()));
+    let w_chat_list = ChatList::new(app, state.clone(), Chats::default());
+    w_window_content.append(&w_chat_list.widget);
+    state
+        .borrow_mut()
+        .tracked_widgets
+        .set_chat_list(Some(w_chat_list));
+
     w_window_content.append(&widget_viewport_chat(app, state.clone()));
 
     let w_global_frame = gtk::Frame::builder()

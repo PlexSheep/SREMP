@@ -3,7 +3,7 @@ use std::{collections::HashMap, ops::Deref, rc::Rc, sync::Arc};
 use async_channel::{Receiver, Sender};
 use tokio::sync::RwLock;
 
-use sremp_client::domain::{UiCommand, UiEvent};
+use sremp_client::domain::{UiCommand, UiEvent, chats::Chats, known_identities::KnownIdentities};
 use sremp_core::{
     chat::Chat,
     identity::{ContactId, UserIdentity, format_key},
@@ -26,9 +26,10 @@ pub(crate) struct UiDomain {
     pub(crate) listen_status: ListenerStatus,
     // actual UI stuff
     pub(crate) tracked_widgets: TrackedWidgets,
-    chats: HashMap<ContactId, Chat>,
     user_identity: Option<Arc<UserIdentity>>,
-    selected_chat: Option<ContactId>,
+
+    // snapshots from the client domain
+    pub(crate) contacts: KnownIdentities,
 }
 
 #[derive(Debug, Clone)]
@@ -45,11 +46,10 @@ impl UiDomain {
         Self {
             command_channel,
             event_channel,
-            chats: HashMap::with_capacity(32),
             tracked_widgets: Default::default(),
             user_identity: Default::default(),
-            selected_chat: Default::default(),
             listen_status: Default::default(),
+            contacts: Default::default(),
         }
     }
     #[must_use]
@@ -92,22 +92,16 @@ impl UiDomain {
         }
     }
 
-    pub(crate) fn chats(&self) -> &HashMap<ContactId, Chat> {
-        &self.chats
+    pub(crate) fn chats(&self) -> Option<&Chats> {
+        Some(self.tracked_widgets.chat_list()?.chats())
     }
 
-    pub(crate) fn set_current_chat(&mut self, key: Option<ContactId>) {
-        if let Some(key) = key {
-            if self.chats.contains_key(&key) {
-                self.selected_chat = Some(key);
-            }
-        } else {
-            log::warn!("Selected a chat that does not exist")
-        }
+    pub(crate) fn selected_chat(&self) -> Option<ContactId> {
+        self.tracked_widgets.chat_list()?.selected_chat()
     }
 
     pub(crate) fn current_chat(&self) -> Option<&Chat> {
-        self.chats.get(self.selected_chat.as_ref()?)
+        self.chats()?.get(self.selected_chat().as_ref()?)
     }
 }
 

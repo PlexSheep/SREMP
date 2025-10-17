@@ -1,23 +1,54 @@
 use gtk::prelude::*;
+use sremp_client::domain::chats::Chats;
 use sremp_core::chat::Chat;
+use sremp_core::identity::ContactId;
 
 use crate::domain::UiDomainSync;
 use crate::gui::label;
 use crate::{GUI_SPACING_LARGE, GUI_SPACING_MID};
 
-pub(crate) fn widget_chats_list(
-    app: &gtk::Application,
+#[derive(Debug)]
+pub(crate) struct ChatList {
+    pub(crate) widget: gtk::Frame,
+    chats: Chats,
+    list: gtk::ListBox,
+    selected: Option<ContactId>,
     state: UiDomainSync,
-) -> impl IsA<gtk::Widget> {
-    let w_list = gtk::ListBox::builder()
-        .selection_mode(gtk::SelectionMode::None)
-        .build();
+    app: gtk::Application,
+}
 
-    {
-        let state_bind = state.borrow();
-        let chats = state_bind.chats();
+impl ChatList {
+    pub(crate) fn new(app: &gtk::Application, state: UiDomainSync, chats: Chats) -> Self {
+        let widget = gtk::Frame::builder()
+            .margin_top(GUI_SPACING_LARGE)
+            .margin_bottom(GUI_SPACING_LARGE)
+            .margin_start(GUI_SPACING_LARGE)
+            .margin_end(GUI_SPACING_LARGE)
+            .build();
 
-        if chats.is_empty() {
+        let mut this = Self {
+            widget,
+            list: Default::default(),
+            selected: None,
+            state,
+            app: app.clone(),
+            chats,
+        };
+
+        this.regenerate();
+
+        this
+    }
+
+    // PERF: we probably should call this too often
+    fn regenerate(&mut self) {
+        self.list = gtk::ListBox::builder()
+            .selection_mode(gtk::SelectionMode::None)
+            .build();
+
+        self.widget.set_child(Some(&self.list));
+
+        if self.chats.is_empty() {
             let w_box = gtk::Box::builder()
                 .orientation(gtk::Orientation::Vertical)
                 .margin_top(GUI_SPACING_LARGE)
@@ -28,7 +59,7 @@ pub(crate) fn widget_chats_list(
 
             w_box.append(&label("No chats yet"));
 
-            w_list.append(
+            self.list.append(
                 &gtk::Frame::builder()
                     .margin_top(GUI_SPACING_MID)
                     .margin_bottom(GUI_SPACING_MID)
@@ -38,25 +69,38 @@ pub(crate) fn widget_chats_list(
                     .build(),
             );
         } else {
-            for chat in chats.values() {
-                let w_chat_card = widget_chat_card(app, state.clone(), chat);
-                w_list.append(&w_chat_card);
+            for chat in self.chats.values() {
+                let w_chat_card = widget_chat_card(&self.app, &self.state, chat);
+                self.list.append(&w_chat_card);
             }
         }
     }
 
-    gtk::Frame::builder()
-        .margin_top(GUI_SPACING_LARGE)
-        .margin_bottom(GUI_SPACING_LARGE)
-        .margin_start(GUI_SPACING_LARGE)
-        .margin_end(GUI_SPACING_LARGE)
-        .child(&w_list)
-        .build()
+    #[inline]
+    pub(crate) fn update_chat(&mut self, cid: ContactId, chat: &Chat) {
+        self.chats.insert(cid, chat.clone());
+        self.regenerate(); // PERF: might become high load if this is called in a chain
+    }
+
+    #[inline]
+    pub(crate) fn replace_chats(&mut self, chats: Chats) {
+        self.chats = chats;
+        self.regenerate();
+    }
+
+    #[inline(always)]
+    pub(crate) fn chats(&self) -> &Chats {
+        &self.chats
+    }
+
+    pub(crate) fn selected_chat(&self) -> Option<ContactId> {
+        self.selected
+    }
 }
 
-pub(crate) fn widget_chat_card(
+fn widget_chat_card(
     _app: &gtk::Application,
-    _state: UiDomainSync,
+    _state: &UiDomainSync,
     chat: &Chat,
 ) -> impl IsA<gtk::Widget> {
     let w_box = gtk::Box::builder()

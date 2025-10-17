@@ -9,7 +9,7 @@ use sremp_core::{
     identity::{ContactId, ContactIdentity},
 };
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct Chats {
     inner: HashMap<ContactId, Chat>,
 }

@@ -46,6 +46,8 @@ impl ClientDomain {
             }
             NetworkEvent::ConnectionEstablished(remote, iden) => {
                 self.known_identities.create_or_update(&iden)?;
+                self.send_ui_evt(UiEvent::SetKnownIdentities(self.known_identities.clone()))
+                    .await;
                 self.send_ui_evt(UiEvent::ConnectionEstablished(remote, iden.id()))
                     .await
             }
