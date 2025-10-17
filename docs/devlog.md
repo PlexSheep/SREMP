@@ -23,6 +23,7 @@ day as part of the previous one. It's just more convenient that way.
 - The connected chat actually appears in the gui
 - Refactored the important big gui widgets to be structs instead of just
   functions (this is much simpler if we want to actually change their contents)
+- Chat opens on click now #37
 
 ### Decisions
 
@@ -35,8 +36,8 @@ day as part of the previous one. It's just more convenient that way.
 
 ### Notes
 
-Next thing will be making the chat cards clickable #38 and actually opening the
-chat with the new `ChatView` #39
+I found a crazy unlikely bug in clippy (probably): <https://github.com/rust-lang/rust-clippy/issues/15904>
+It goes boom when applying fixes because of my weird declarative macros.
 
 ### Mood
 
