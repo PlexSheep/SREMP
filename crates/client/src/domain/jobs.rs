@@ -9,7 +9,7 @@ use sremp_core::{
 };
 
 use crate::{
-    domain::{ClientDomain, UiCommand, UiEvent},
+    domain::{ClientDomain, UiCommand, UiEvent, known_identities::SharedContact},
     error::{ClientError, ClientResult},
 };
 
@@ -122,8 +122,19 @@ impl ClientDomain {
     ) -> ClientResult<()> {
         log::trace!("{}", current_function!());
         self.user_identity = iden.clone();
+
+        // we must have the local user identity in the known identities.
+        // - We display them for the messages the user wrote
+        // - We need them if the user wants to send messages to themselves as a self-contact
+        if let Some(iden) = iden.clone() {
+            let self_contact: SharedContact = ContactIdentity::from_user_identity(&iden).into();
+            self.known_identities.create_or_update(&self_contact)?;
+            self.send_ui_evt(UiEvent::SetKnownIdentities(self.known_identities.clone()))
+                .await;
+        }
+
         self.net_command_channel()
-            .send(NetworkCommand::SetIdentity(iden.clone()))
+            .send(NetworkCommand::SetIdentity(iden))
             .await
             .map_err(CoreError::from)?;
         self.ui_event_channel()

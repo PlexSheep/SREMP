@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     error::CoreResult,
-    identity::{Identity, Trust},
+    identity::{Identity, Trust, UserIdentity},
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -25,6 +25,16 @@ impl ContactIdentity {
             first_seen: Utc::now(),
             last_seen: Utc::now(),
         })
+    }
+
+    #[cold]
+    pub fn from_user_identity(user: &UserIdentity) -> Self {
+        Self {
+            identity: user.identity.clone(),
+            trust: Trust::Trusted,
+            first_seen: Utc::now(),
+            last_seen: Utc::now(),
+        }
     }
 
     /// Sets the last-seen timestamp of this [`ContactIdentity`] to now.
