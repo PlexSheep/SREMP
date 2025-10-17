@@ -58,12 +58,15 @@ pub(crate) fn show_tofu_dialog(
                     .borrow_mut()
                     .set_selected_chat(Some(contact_id.clone()));
             }
-            gtk::ResponseType::Reject | gtk::ResponseType::DeleteEvent => {
+            gtk::ResponseType::Reject => {
                 // User chose to reject - send command to block and disconnect
                 state
                     .borrow()
                     .send_cmd(UiCommand::TrustContact(contact_id.clone(), Trust::Rejected));
                 state.borrow().send_cmd(UiCommand::Disconnect(socket));
+            }
+            gtk::ResponseType::DeleteEvent => {
+                log::debug!("If you only close this dialog and not choose trust or reject, tiny kitties might die.")
             }
             other => log::warn!("Undefined dialog action: {other:?}"),
         }
