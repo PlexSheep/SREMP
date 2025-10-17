@@ -21,14 +21,22 @@ day as part of the previous one. It's just more convenient that way.
 - Refactored the gui a bit
 - First tofu trust dialog + sremp doesnt crash after connection established
 - The connected chat actually appears in the gui
+- Refactored the important big gui widgets to be structs instead of just
+  functions (this is much simpler if we want to actually change their contents)
 
 ### Decisions
 
 - Purely functional gui isn't great. Having special widgets in structs is neat.
 - Start the listener on 33399 so that i dont always have to write a random
   port. This should be a random port in the actual release.
+- The local user identity must also be a contact and therefore be added to the
+  known identities. This is to display the identity of our own messages and
+  eventually if you want to message yourself something.
 
 ### Notes
+
+Next thing will be making the chat cards clickable #38 and actually opening the
+chat with the new `ChatView` #39
 
 ### Mood
 
