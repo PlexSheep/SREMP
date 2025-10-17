@@ -26,6 +26,8 @@ impl ClientDomain {
             UiCommand::SendMessage(key, msg) => self.send_message(key, msg).await,
             UiCommand::StartChat(cid) => {
                 self.chats.entry(cid).or_default();
+                self.send_ui_evt(UiEvent::LoadedChats(self.chats.clone()))
+                    .await;
                 Ok(())
             }
             UiCommand::TrustContact(cid, trust) => {
