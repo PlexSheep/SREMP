@@ -1,5 +1,6 @@
 use gtk::prelude::*;
 use sremp_client::domain::chats::Chats;
+use sremp_client::domain::known_identities::{KnownIdentities, SharedContact};
 use sremp_core::chat::Chat;
 use sremp_core::identity::ContactId;
 
@@ -13,12 +14,12 @@ pub(crate) struct ChatList {
     chats: Chats,
     list: gtk::ListBox,
     selected: Option<ContactId>,
-    state: UiDomainSync,
     app: gtk::Application,
+    contacts: KnownIdentities,
 }
 
 impl ChatList {
-    pub(crate) fn new(app: &gtk::Application, state: UiDomainSync, chats: Chats) -> Self {
+    pub(crate) fn new(app: &gtk::Application, contacts: KnownIdentities, chats: Chats) -> Self {
         let widget = gtk::Frame::builder()
             .margin_top(GUI_SPACING_LARGE)
             .margin_bottom(GUI_SPACING_LARGE)
@@ -30,8 +31,8 @@ impl ChatList {
             widget,
             list: Default::default(),
             selected: None,
-            state,
             app: app.clone(),
+            contacts,
             chats,
         };
 
@@ -70,7 +71,8 @@ impl ChatList {
             );
         } else {
             for (cid, chat) in self.chats.iter() {
-                let w_chat_card = widget_chat_card(&self.app, &self.state, cid, chat);
+                let contact = self.contacts[cid].clone();
+                let w_chat_card = widget_chat_card(&self.app, contact, chat);
                 self.list.append(&w_chat_card);
             }
         }
@@ -103,12 +105,26 @@ impl ChatList {
         self.selected = chat;
         self.regenerate();
     }
+
+    #[inline(always)]
+    pub(crate) fn contacts(&self) -> &KnownIdentities {
+        &self.contacts
+    }
+
+    #[inline(always)]
+    pub(crate) fn set_contacts(&mut self, contacts: KnownIdentities) {
+        self.contacts = contacts;
+    }
+
+    #[inline(always)]
+    pub(crate) fn contacts_mut(&mut self) -> &mut KnownIdentities {
+        &mut self.contacts
+    }
 }
 
 fn widget_chat_card(
     _app: &gtk::Application,
-    state: &UiDomainSync,
-    cid: &ContactId,
+    contact: SharedContact,
     chat: &Chat,
 ) -> impl IsA<gtk::Widget> {
     let w_box = gtk::Box::builder()
@@ -119,10 +135,7 @@ fn widget_chat_card(
         .margin_end(GUI_SPACING_LARGE)
         .build();
 
-    // BUG: RACE CONDITION
-    //let contact = state.borrow().contacts[cid].clone();
-    //w_box.append(&label(contact.username()));
-    w_box.append(&label("TODO GET USERNAME"));
+    w_box.append(&label(contact.username()));
 
     gtk::Frame::builder()
         .margin_top(GUI_SPACING_MID)

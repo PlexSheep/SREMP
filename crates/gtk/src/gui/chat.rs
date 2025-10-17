@@ -32,7 +32,7 @@ impl MessageBubble {
 
         let author = match state
             .borrow()
-            .contacts
+            .contacts()
             .get(&self.inner.meta().author_id)
             .cloned()
         {

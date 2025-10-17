@@ -52,10 +52,10 @@ async fn event_processor(state: UiDomainSync) {
                         }
                     }
                     UiEvent::SetKnownIdentities(contacts) => {
-                        state.borrow_mut().contacts = contacts;
+                        state.borrow_mut().set_contacts(contacts);
                     }
                     UiEvent::ConnectionEstablished(socket, cid) => {
-                        let contact = state.borrow().contacts[&cid].clone();
+                        let contact = state.borrow().contacts()[&cid].clone();
                         // open TOFU window and let the user choose if they trust the
                         // identity.
                         // If so, create a new chat with the peer.

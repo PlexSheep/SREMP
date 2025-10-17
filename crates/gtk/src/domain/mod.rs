@@ -15,7 +15,9 @@ pub(crate) mod tracked_widgets;
 use tracked_widgets::TrackedWidgets;
 
 use crate::{
-    RUNTIME, domain::listen::ListenerStatus, gui::identity::show_identity_created_success,
+    RUNTIME,
+    domain::listen::ListenerStatus,
+    gui::{chats::ChatList, identity::show_identity_created_success},
 };
 
 #[derive(Debug)]
@@ -26,9 +28,6 @@ pub(crate) struct UiDomain {
     // actual UI stuff
     pub(crate) tracked_widgets: TrackedWidgets,
     user_identity: Option<Arc<UserIdentity>>,
-
-    // snapshots from the client domain
-    pub(crate) contacts: KnownIdentities,
 }
 
 #[derive(Debug, Clone)]
@@ -49,7 +48,6 @@ impl UiDomain {
             tracked_widgets: Default::default(),
             user_identity: Default::default(),
             listen_status: Default::default(),
-            contacts: Default::default(),
         }
     }
     #[must_use]
@@ -99,12 +97,34 @@ impl UiDomain {
     }
 
     #[inline]
-    pub(crate) fn set_selected_chat(&mut self, chat: Option<ContactId>) {
+    fn chat_list(&self) -> &ChatList {
+        self.tracked_widgets
+            .chat_list()
+            .as_ref()
+            .expect("could not get chat list")
+    }
+
+    #[inline]
+    fn chat_list_mut(&mut self) -> &mut ChatList {
         self.tracked_widgets
             .chat_list_mut()
             .as_mut()
             .expect("could not get chat list")
-            .set_selected_chat(chat)
+    }
+
+    #[inline]
+    pub(crate) fn set_selected_chat(&mut self, chat: Option<ContactId>) {
+        self.chat_list_mut().set_selected_chat(chat)
+    }
+
+    #[inline]
+    pub(crate) fn contacts(&self) -> &KnownIdentities {
+        self.chat_list().contacts()
+    }
+
+    #[inline]
+    pub(crate) fn set_contacts(&mut self, contacts: KnownIdentities) {
+        self.chat_list_mut().set_contacts(contacts);
     }
 
     #[inline]

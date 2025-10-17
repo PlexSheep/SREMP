@@ -23,7 +23,7 @@ pub(crate) fn start_application(app: &gtk::Application, state: UiDomainSync) {
         .orientation(gtk::Orientation::Horizontal)
         .build();
 
-    let w_chat_list = ChatList::new(app, state.clone(), Chats::default());
+    let w_chat_list = ChatList::new(app, Default::default(), Chats::default());
     w_window_content.append(&w_chat_list.widget);
     state
         .borrow_mut()
