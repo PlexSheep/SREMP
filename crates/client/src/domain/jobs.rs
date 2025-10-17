@@ -5,7 +5,7 @@ use sremp_core::{
     current_function,
     domain::{NetworkCommand, NetworkEvent},
     error::{CoreError, CoreResult},
-    identity::{ContactId, UserIdentity},
+    identity::{ContactId, ContactIdentity, UserIdentity},
 };
 
 use crate::{
@@ -24,7 +24,21 @@ impl ClientDomain {
             UiCommand::Disconnect(remote) => self.disconnect(remote).await,
             UiCommand::SetIdentity(ident) => self.set_identity(ident).await,
             UiCommand::SendMessage(key, msg) => self.send_message(key, msg).await,
-            UiCommand::LoadChat(key) => self.load_chat(key).await,
+            UiCommand::StartChat(cid) => {
+                self.chats.entry(cid).or_default();
+                Ok(())
+            }
+            UiCommand::TrustContact(cid, trust) => {
+                if let Some(contact) = self.known_identities.get(&cid) {
+                    // replace the contact with the changed one
+                    let mut nc: ContactIdentity = (**contact).clone();
+                    nc.trust = trust;
+                    self.known_identities.insert(cid, Arc::new(nc));
+                } else {
+                    log::warn!("Could not set trust for {cid}, because this is not a known contact")
+                }
+                Ok(())
+            }
         }
     }
 
@@ -129,17 +143,6 @@ impl ClientDomain {
             .await;
         self.send_ui_evt(UiEvent::MessageSent(*remote, to, msg))
             .await;
-        Ok(())
-    }
-
-    pub(crate) async fn load_chat(&self, id: ContactId) -> ClientResult<()> {
-        log::trace!("{}", current_function!());
-        if self.chats.contains_key(&id) {
-            self.send_ui_evt(UiEvent::ChatLoaded(self.chats.get(&id).unwrap().clone()))
-                .await;
-        } else {
-            self.send_ui_evt(UiEvent::ChatNotFound(id)).await;
-        }
         Ok(())
     }
 

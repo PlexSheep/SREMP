@@ -10,7 +10,6 @@ use sremp_core::{
 };
 
 pub(crate) mod connect;
-pub(crate) mod find;
 pub(crate) mod listen;
 pub(crate) mod tracked_widgets;
 use tracked_widgets::TrackedWidgets;
@@ -39,6 +38,7 @@ pub(crate) struct UiDomainSync {
 
 impl UiDomain {
     #[must_use]
+    #[cold]
     pub(crate) fn new(
         command_channel: Sender<UiCommand>,
         event_channel: Receiver<UiEvent>,
@@ -79,6 +79,7 @@ impl UiDomain {
         self.send_cmd(UiCommand::SetIdentity(iden));
     }
 
+    #[inline]
     pub(crate) fn apply_user_identity(&mut self, iden: Option<Arc<UserIdentity>>) {
         self.user_identity = iden.clone();
 
@@ -92,14 +93,26 @@ impl UiDomain {
         }
     }
 
+    #[inline]
     pub(crate) fn chats(&self) -> Option<&Chats> {
         Some(self.tracked_widgets.chat_list()?.chats())
     }
 
+    #[inline]
+    pub(crate) fn set_selected_chat(&mut self, chat: Option<ContactId>) {
+        self.tracked_widgets
+            .chat_list_mut()
+            .as_mut()
+            .expect("could not get chat list")
+            .set_selected_chat(chat)
+    }
+
+    #[inline]
     pub(crate) fn selected_chat(&self) -> Option<ContactId> {
         self.tracked_widgets.chat_list()?.selected_chat()
     }
 
+    #[inline]
     pub(crate) fn current_chat(&self) -> Option<&Chat> {
         self.chats()?.get(self.selected_chat().as_ref()?)
     }

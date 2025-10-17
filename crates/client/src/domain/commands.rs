@@ -2,7 +2,7 @@ use std::{fmt::Display, net::SocketAddr, sync::Arc};
 
 use sremp_core::{
     chat::messages::SharedMessage,
-    identity::{ContactId, UserIdentity},
+    identity::{ContactId, Trust, UserIdentity},
 };
 
 #[derive(Debug, Clone)]
@@ -10,11 +10,12 @@ use sremp_core::{
 pub enum UiCommand {
     SetIdentity(Option<Arc<UserIdentity>>),
     SendMessage(ContactId, SharedMessage),
+    StartChat(ContactId),
+    TrustContact(ContactId, Trust),
     StartListener(SocketAddr),
     StopListener,
     Connect(SocketAddr),
     Disconnect(SocketAddr),
-    LoadChat(ContactId),
 }
 
 impl Display for UiCommand {
@@ -25,7 +26,9 @@ impl Display for UiCommand {
             match self {
                 Self::Connect(addr) => format!("Connect to {addr}"),
                 Self::Disconnect(addr) => format!("Disconnect from {addr}"),
-                Self::SendMessage(id, _msg) => format!("Send Message to {}", id),
+                Self::StartChat(id) => format!("Create new chat with {id}"),
+                Self::SendMessage(id, _msg) => format!("Send Message to {id}"),
+                Self::TrustContact(id, trust) => format!("Set trust of {id} to {trust}"),
                 Self::StartListener(addr) =>
                     format!("Start listening for incoming connection on {addr}"),
                 Self::StopListener => "Stop listening for incoming connections".to_string(),
@@ -40,7 +43,6 @@ impl Display for UiCommand {
                         "Set working copy of user identity to <None>".to_string()
                     }
                 }
-                Self::LoadChat(id) => format!("Load chat for contact {}, id any", id),
             }
         )
     }

@@ -30,7 +30,12 @@ impl MessageBubble {
             .orientation(gtk::Orientation::Horizontal)
             .build();
 
-        let author = match state.borrow().find_contact(&self.inner.meta().author_id) {
+        let author = match state
+            .borrow()
+            .contacts
+            .get(&self.inner.meta().author_id)
+            .cloned()
+        {
             Some(a) => a,
             None => panic!("unknwon author: {:?}", self.meta().author_id),
         };

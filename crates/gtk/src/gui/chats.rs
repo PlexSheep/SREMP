@@ -93,8 +93,15 @@ impl ChatList {
         &self.chats
     }
 
+    #[inline(always)]
     pub(crate) fn selected_chat(&self) -> Option<ContactId> {
-        self.selected
+        self.selected.clone()
+    }
+
+    #[inline(always)]
+    pub(crate) fn set_selected_chat(&mut self, chat: Option<ContactId>) {
+        self.selected = chat;
+        self.regenerate();
     }
 }
 

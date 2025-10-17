@@ -9,7 +9,7 @@ use sremp_core::current_function;
 
 use crate::{
     domain::{UiDomain, UiDomainSync, listen::ListenerStatus},
-    gui::identity::show_identity_created_success,
+    gui::{identity::show_identity_created_success, tofu::show_tofu_dialog},
 };
 
 use gtk::glib;
@@ -55,12 +55,13 @@ async fn event_processor(state: UiDomainSync) {
                         state.borrow_mut().contacts = contacts;
                     }
                     UiEvent::ConnectionEstablished(socket, cid) => {
-                        let contact = state.borrow().contacts[&cid];
-                        // TODO: open TOFU window and let the user choose if they trust the
+                        let contact = state.borrow().contacts[&cid].clone();
+                        // open TOFU window and let the user choose if they trust the
                         // identity.
                         // If so, create a new chat with the peer.
                         // If not, disconnect.
                         // This should not block processing of UiEvents, i think?
+                        show_tofu_dialog(state.clone(), contact, socket);
                     }
                     other => {
                         log::warn!("Received unimplemented Ui event: {other}")

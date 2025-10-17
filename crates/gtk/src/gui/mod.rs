@@ -10,6 +10,7 @@ pub(crate) mod chat;
 pub(crate) mod chats;
 pub(crate) mod connect;
 pub(crate) mod identity;
+pub(crate) mod tofu;
 pub(crate) mod topbar;
 
 use chat::*;
