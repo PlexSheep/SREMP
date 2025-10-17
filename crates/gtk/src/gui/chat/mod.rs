@@ -22,7 +22,9 @@ pub(crate) struct ChatView {
 impl ChatView {
     pub(crate) fn new(contacts: KnownIdentities, chat: Option<Chat>) -> Self {
         let mut this = Self {
-            widget: Default::default(),
+            widget: gtk::Box::builder()
+                .orientation(gtk::Orientation::Vertical)
+                .build(),
             list: Default::default(),
             scroller: Default::default(),
             detailbar: Default::default(),
@@ -66,10 +68,14 @@ impl ChatView {
                 log::trace!("Chat is some");
                 self.detailbar = widget_detailbar("Chat");
 
-                for message in c.messages() {
-                    let contact = &self.contacts[&message.meta().author_id];
-                    let message_bubble = MessageBubble::from(message);
-                    self.list.append(&message_bubble.widget(contact));
+                if c.messages().is_empty() {
+                    self.detailbar = widget_detailbar("Chat is empty");
+                } else {
+                    for message in c.messages() {
+                        let contact = &self.contacts[&message.meta().author_id];
+                        let message_bubble = MessageBubble::from(message);
+                        self.list.append(&message_bubble.widget(contact));
+                    }
                 }
             }
             None => {
@@ -85,9 +91,10 @@ impl ChatView {
             .child(&self.list)
             .build();
 
-        self.widget = gtk::Box::builder()
-            .orientation(gtk::Orientation::Vertical)
-            .build();
+        while let Some(child) = self.widget.first_child() {
+            self.widget.remove(&child);
+        }
+
         // TODO: scroll to the bottom
 
         self.widget.append(&self.detailbar);
