@@ -31,7 +31,7 @@ impl ClientDomain {
                 Ok(())
             }
             UiCommand::SelectChat(cid) => {
-                let _: () = self.send_ui_evt(UiEvent::OpenChat(cid)).await;
+                self.send_ui_evt(UiEvent::OpenChat(cid)).await;
                 Ok(())
             }
             UiCommand::TrustContact(cid, trust) => {
