@@ -1,7 +1,7 @@
-use std::{collections::HashMap, fmt::Display, net::SocketAddr, sync::Arc};
+use std::{fmt::Display, net::SocketAddr, sync::Arc};
 
 use sremp_core::{
-    chat::{Chat, messages::SharedMessage},
+    chat::messages::SharedMessage,
     identity::{ContactId, UserIdentity},
 };
 
