@@ -1,7 +1,7 @@
 use std::{net::SocketAddr, sync::Arc};
 
 use sremp_core::{
-    chat::messages::SharedMessage,
+    chat::messages::{Message, SharedMessage},
     current_function,
     domain::{NetworkCommand, NetworkEvent},
     error::{CoreError, CoreResult},
@@ -164,11 +164,17 @@ impl ClientDomain {
     }
 
     pub(crate) async fn incoming_message(
-        &self,
+        &mut self,
         remote: SocketAddr,
         id: ContactId,
         data: Arc<Vec<u8>>,
     ) -> CoreResult<()> {
-        todo!()
+        let msg: Message = rmp_serde::from_slice(&data)?;
+
+        self.chats.add_message(id.clone(), msg.into());
+
+        self.send_ui_evt(UiEvent::LoadedChats(self.chats.clone()))
+            .await;
+        Ok(())
     }
 }

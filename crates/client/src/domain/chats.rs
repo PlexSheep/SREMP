@@ -5,8 +5,8 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 use sremp_core::{
-    chat::Chat,
-    identity::{ContactId, ContactIdentity},
+    chat::{Chat, messages::SharedMessage},
+    identity::ContactId,
 };
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
@@ -19,9 +19,12 @@ impl Chats {
         Default::default()
     }
 
-    pub fn create_or_update(&mut self, iden: &ContactIdentity) -> &mut Chat {
-        let id = iden.id();
+    pub fn create_or_update(&mut self, id: ContactId) -> &mut Chat {
         self.entry(id).or_default()
+    }
+
+    pub fn add_message(&mut self, id: ContactId, msg: SharedMessage) {
+        self.create_or_update(id).add_message(msg);
     }
 }
 

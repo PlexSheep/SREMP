@@ -12,7 +12,6 @@ use crate::domain::{chats::Chats, known_identities::KnownIdentities};
 pub enum UiEvent {
     ConnectionEstablished(SocketAddr, ContactId),
     ConnectionLost(SocketAddr, ContactId),
-    IncomingMessage(SocketAddr, ContactId, SharedMessage),
     MessageSent(SocketAddr, ContactId, SharedMessage),
     ConnectionReset(SocketAddr),
     ConnectionFailed(SocketAddr, String),
@@ -33,8 +32,6 @@ impl Display for UiEvent {
                 Self::ConnectionEstablished(addr, id) =>
                     format!("Connection established with {addr} ({id})"),
                 Self::ConnectionLost(addr, id) => format!("Peer {addr} ({id}) has disconnected"),
-                Self::IncomingMessage(addr, id, _msg) =>
-                    format!("Message received from {addr} ({id})"),
                 Self::MessageSent(addr, id, _msg) => format!("Message sent to {addr} ({id})"),
                 Self::ConnectionFailed(addr, reason) =>
                     format!("Connection to {addr} attempt was aborted: {reason}"),
