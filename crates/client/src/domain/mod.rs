@@ -64,9 +64,11 @@ impl ClientDomain {
                 cmd = this.ui_command_channel().recv() => {
                     drop(this);
                     let cmd = cmd.map_err(CoreError::from)?;
-                    ssy.write().await.process_ui_command(
+                    if let Err(e) = ssy.write().await.process_ui_command(
                         cmd,
-                    ).await?;
+                    ).await {
+                        log::error!("Error while processing ui command: {e}")
+                    }
                 },
                 evt = this.net_event_channel().recv() => {
                     drop(this);

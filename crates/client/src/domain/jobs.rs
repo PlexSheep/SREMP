@@ -153,10 +153,14 @@ impl ClientDomain {
         log::trace!("formatting message for wire");
         let data: Arc<Vec<u8>> = Arc::new(msg.to_wire());
         log::trace!("getting open connection");
-        // BUG: deadlock here?
+        // BUG: open_connections is never filled, so this always errors
         let remote = match self.open_connections.get(&to) {
-            Some(r) => r,
+            Some(r) => {
+                log::trace!("open connection exists! {r}");
+                r
+            }
             None => {
+                log::trace!("no open connection exists!");
                 return Err(ClientError::NoConnection(to.into()));
             }
         };
