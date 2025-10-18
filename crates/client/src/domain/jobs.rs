@@ -58,8 +58,9 @@ impl ClientDomain {
             NetworkEvent::ListenerStarted(addr) => {
                 self.send_ui_evt(UiEvent::ListenerStarted(addr)).await
             }
-            NetworkEvent::ConnectionLost(remote, key) => {
-                self.send_ui_evt(UiEvent::ConnectionLost(remote, key)).await
+            NetworkEvent::ConnectionLost(remote, cid) => {
+                self.open_connections.remove(&cid);
+                self.send_ui_evt(UiEvent::ConnectionLost(remote, cid)).await;
             }
             NetworkEvent::ConnectionFailed(remote, reason) => {
                 self.send_ui_evt(UiEvent::ConnectionFailed(remote, reason))
@@ -67,13 +68,16 @@ impl ClientDomain {
             }
             NetworkEvent::ConnectionEstablished(remote, iden) => {
                 self.known_identities.create_or_update(&iden)?;
+                self.open_connections.insert(iden.id(), remote);
                 self.send_ui_evt(UiEvent::SetKnownIdentities(self.known_identities.clone()))
                     .await;
                 self.send_ui_evt(UiEvent::ConnectionEstablished(remote, iden.id()))
                     .await
             }
-            NetworkEvent::MessageSent(remote, key, data) => {
-                todo!()
+            NetworkEvent::MessageSent(remote, cid, data) => {
+                let msg: Message = rmp_serde::from_slice(&data).map_err(CoreError::from)?;
+                self.send_ui_evt(UiEvent::MessageSent(remote, cid, msg.into()))
+                    .await
             }
             NetworkEvent::IncomingMessage(remote, key, data) => {
                 self.incoming_message(remote, key, data).await?
@@ -167,14 +171,12 @@ impl ClientDomain {
         log::trace!("sending commands and events");
         self.send_net_cmd(NetworkCommand::SendMessage(*remote, to.clone(), data))
             .await;
-        self.send_ui_evt(UiEvent::MessageSent(*remote, to, msg))
-            .await;
         Ok(())
     }
 
     pub(crate) async fn incoming_message(
         &mut self,
-        remote: SocketAddr,
+        _remote: SocketAddr,
         id: ContactId,
         data: Arc<Vec<u8>>,
     ) -> CoreResult<()> {
