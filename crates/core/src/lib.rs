@@ -19,7 +19,18 @@ pub fn version() -> String {
 #[macro_export]
 macro_rules! trace_current_function {
     () => {{
-        log::trace!("{}", sremp_core::current_function!());
+        #[allow(unexpected_cfgs)]
+        {
+            #[cfg(is_core)]
+            {
+                use crate as sremp_core;
+                log::trace!("{}", sremp_core::current_function!());
+            }
+            #[cfg(not(is_core))]
+            {
+                log::trace!("{}", $crate::current_function!());
+            }
+        }
     }};
 }
 

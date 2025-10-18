@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::CoreResult;
 use crate::identity::ContactId;
-use crate::ser_helper::*;
+use crate::{ser_helper::*, trace_current_function};
 
 pub type MessageID = u32;
 
@@ -107,6 +107,7 @@ impl Message {
 
     #[inline]
     pub fn to_wire(&self) -> Vec<u8> {
+        trace_current_function!();
         rmp_serde::to_vec(self).expect("could not serialize Message")
     }
 }
