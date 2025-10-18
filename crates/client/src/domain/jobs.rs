@@ -147,6 +147,7 @@ impl ClientDomain {
         Ok(())
     }
 
+    // BUG: deadlock here
     pub(crate) async fn send_message(&self, to: ContactId, msg: SharedMessage) -> ClientResult<()> {
         log::trace!("{}", current_function!());
         let data: Arc<Vec<u8>> = Arc::new(msg.to_wire());

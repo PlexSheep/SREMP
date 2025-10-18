@@ -1,10 +1,6 @@
 use std::net::SocketAddr;
 
-use crate::{
-    chat::messages::{Message, SharedMessage},
-    domain::NetworkDomain,
-    identity::ContactIdentity,
-};
+use crate::{chat::messages::SharedMessage, domain::NetworkDomain, identity::ContactIdentity};
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
