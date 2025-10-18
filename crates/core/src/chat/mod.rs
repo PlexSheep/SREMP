@@ -29,7 +29,7 @@ impl Chat {
         &self.messages
     }
 
-    pub fn add_message(&mut self, msg: Message) {
+    pub fn add_message(&mut self, msg: impl Into<SharedMessage>) {
         self.messages.push(msg.into());
         self.sort();
     }

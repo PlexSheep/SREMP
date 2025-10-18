@@ -39,6 +39,13 @@ impl NetworkDomain {
                     .await
             }
             NetworkCommand::SetIdentity(iden) => state.write().await.user_identity = iden,
+            NetworkCommand::Disconnect(remote) => {
+                if let Some(connection) = state.write().await.active_connections.remove(&remote) {
+                    connection.conn.disconnect().await?;
+                } else {
+                    log::warn!("{remote} has no active connection")
+                }
+            }
             _ => todo!(),
         };
         Ok(())
