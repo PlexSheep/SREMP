@@ -6,6 +6,7 @@ use sremp_core::{
     domain::{NetworkCommand, NetworkEvent},
     error::{CoreError, CoreResult},
     identity::{ContactId, ContactIdentity, UserIdentity},
+    trace_current_function,
 };
 
 use crate::{
@@ -147,16 +148,19 @@ impl ClientDomain {
         Ok(())
     }
 
-    // BUG: deadlock here
     pub(crate) async fn send_message(&self, to: ContactId, msg: SharedMessage) -> ClientResult<()> {
-        log::trace!("{}", current_function!());
+        trace_current_function!();
+        log::trace!("formatting message for wire");
         let data: Arc<Vec<u8>> = Arc::new(msg.to_wire());
+        log::trace!("getting open connection");
+        // BUG: deadlock here?
         let remote = match self.open_connections.get(&to) {
             Some(r) => r,
             None => {
                 return Err(ClientError::NoConnection(to.into()));
             }
         };
+        log::trace!("sending commands and events");
         self.send_net_cmd(NetworkCommand::SendMessage(*remote, to.clone(), data))
             .await;
         self.send_ui_evt(UiEvent::MessageSent(*remote, to, msg))
