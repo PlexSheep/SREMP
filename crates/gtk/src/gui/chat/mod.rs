@@ -2,7 +2,7 @@ use gtk::prelude::*;
 use sremp_client::domain::known_identities::KnownIdentities;
 use sremp_core::{chat::Chat, trace_current_function};
 
-use crate::gui::widget_detailbar;
+use crate::{domain::UiDomainSync, gui::widget_detailbar};
 
 mod bubble;
 use bubble::*;
@@ -17,10 +17,11 @@ pub(crate) struct ChatView {
     scroller: gtk::ScrolledWindow,
     chat: Option<Chat>,
     contacts: KnownIdentities,
+    state: UiDomainSync,
 }
 
 impl ChatView {
-    pub(crate) fn new(contacts: KnownIdentities, chat: Option<Chat>) -> Self {
+    pub(crate) fn new(contacts: KnownIdentities, chat: Option<Chat>, state: UiDomainSync) -> Self {
         let mut this = Self {
             widget: gtk::Box::builder()
                 .orientation(gtk::Orientation::Vertical)
@@ -30,6 +31,7 @@ impl ChatView {
             detailbar: Default::default(),
             chat,
             contacts,
+            state,
         };
         this.regenerate();
         this
@@ -99,6 +101,6 @@ impl ChatView {
 
         self.widget.append(&self.detailbar);
         self.widget.append(&self.scroller);
-        self.widget.append(&widget_input_area());
+        self.widget.append(&widget_input_area(self.state.clone()));
     }
 }

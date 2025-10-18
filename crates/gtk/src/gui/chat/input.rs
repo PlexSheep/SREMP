@@ -1,9 +1,12 @@
 use crate::GUI_SPACING_MID;
 use crate::domain::UiDomainSync;
 
+use chrono::Utc;
 use gtk::prelude::*;
+use sremp_client::domain::UiCommand;
+use sremp_core::chat::messages::Message;
 
-pub(super) fn widget_input_area() -> impl IsA<gtk::Widget> {
+pub(super) fn widget_input_area(state: UiDomainSync) -> impl IsA<gtk::Widget> {
     let w_frame = gtk::Frame::builder()
         .margin_top(GUI_SPACING_MID)
         .margin_bottom(GUI_SPACING_MID)
@@ -78,8 +81,20 @@ pub(super) fn widget_input_area() -> impl IsA<gtk::Widget> {
     w_btn_send.connect_clicked(move |_| {
         let text = tb.text(&tb.start_iter(), &tb.end_iter(), false);
         if !text.trim().is_empty() {
-            // let msg = Message::new(text, Utc::now(), chat.contact().identity.public_key);
-            log::warn!("Sending messages is not yet implemented");
+            let msg = Message::new(
+                text,
+                Utc::now(),
+                state
+                    .borrow()
+                    .user_identity()
+                    .expect("no user identity exists")
+                    .id(),
+            );
+            let state_b = state.borrow();
+            state_b.send_cmd(UiCommand::SendMessage(
+                state_b.selected_chat().expect("no chat is selected"),
+                msg.into(),
+            ));
             tb.set_text("");
         }
     });
