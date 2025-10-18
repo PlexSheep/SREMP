@@ -6,7 +6,6 @@ use crate::ser_helper::*;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ContactId {
-    #[serde(flatten)]
     #[serde(serialize_with = "ser_arc", deserialize_with = "deser_arc")]
     key: Arc<ed25519_dalek::VerifyingKey>,
 }
