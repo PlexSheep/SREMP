@@ -1,9 +1,6 @@
 use std::{collections::hash_map::Entry, net::SocketAddr, sync::Arc};
 
-use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt},
-    net,
-};
+use tokio::net;
 
 use crate::{
     current_function,
@@ -45,6 +42,19 @@ impl NetworkDomain {
                 } else {
                     log::warn!("{remote} has no active connection")
                 }
+            }
+            NetworkCommand::SendMessage(remote, cid, data) => {
+                let mut state_b = state.write().await;
+                let condat = state_b
+                    .active_connections
+                    .get_mut(&remote)
+                    .expect("no active connection for this remote");
+
+                if condat.iden.id() != cid {
+                    panic!("connection identity does not match our entries somehow")
+                }
+
+                condat.conn.send_direct_message(&data).await?;
             }
             _ => todo!(),
         };

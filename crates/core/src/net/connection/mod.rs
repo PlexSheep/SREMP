@@ -66,6 +66,10 @@ impl Connection {
     pub(crate) async fn peer_identity(&self) -> &Identity {
         delegate!(self, peer_identity().await)
     }
+
+    pub(crate) async fn send_direct_message(&mut self, data: &[u8]) -> CoreResult<()> {
+        delegate!(self, send_direct_message(data).await)
+    }
 }
 
 impl P2PConnection {
@@ -218,6 +222,17 @@ impl P2PConnection {
                 Err(e)
             }
         }
+    }
+
+    async fn send_direct_message(&mut self, data: &[u8]) -> CoreResult<()> {
+        Self::dead_switch(&mut self.stream, async |tcp_stream| {
+            log::debug!("Sending direct message to peer");
+            let mut buf = Vec::with_capacity(data.len());
+            let len = self.transport.write_message(data, &mut buf)?;
+            Frame::from_payload(&buf[..len])?.send(tcp_stream).await?;
+            Ok(())
+        })
+        .await
     }
 
     fn noise_builder<'a>(user: &'a UserIdentity) -> CoreResult<snow::Builder<'a>> {
