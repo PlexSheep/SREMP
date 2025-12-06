@@ -1,4 +1,4 @@
-use std::sync::LazyLock;
+use std::{char::MAX, sync::LazyLock};
 
 use snow::{TransportState, params::NoiseParams};
 use tokio::{io::AsyncWriteExt, net};
@@ -38,6 +38,7 @@ pub struct P2PConnection {
     stream: net::TcpStream,
     peer_identity: Identity,
     transport: snow::TransportState,
+    buffer: Box<[u8; MAX_FRAME_SIZE]>,
 }
 
 impl Connection {
@@ -104,6 +105,7 @@ impl P2PConnection {
             stream: tcp_stream,
             peer_identity,
             transport,
+            buffer: Box::new([0; MAX_FRAME_SIZE]),
         })
     }
 
@@ -140,6 +142,7 @@ impl P2PConnection {
             stream: tcp_stream,
             peer_identity,
             transport,
+            buffer: Box::new([0; MAX_FRAME_SIZE]),
         })
     }
 
@@ -227,9 +230,14 @@ impl P2PConnection {
     async fn send_direct_message(&mut self, data: &[u8]) -> CoreResult<()> {
         Self::dead_switch(&mut self.stream, async |tcp_stream| {
             log::debug!("Sending direct message to peer");
-            let mut buf = Vec::with_capacity(data.len());
-            let len = self.transport.write_message(data, &mut buf)?;
-            Frame::from_payload(&buf[..len])?.send(tcp_stream).await?;
+            log::trace!("Input data:\n{data:#x?}");
+
+            // NOTE: Will result in Error::Input if the size of the output exceeds the max message length in the Noise Protocol (65535 bytes).
+            let len = self.transport.write_message(data, &mut *self.buffer)?;
+
+            Frame::from_payload(&self.buffer[..len])?
+                .send(tcp_stream)
+                .await?;
             Ok(())
         })
         .await
