@@ -14,6 +14,12 @@ project.
 Also, since I'm a night person, I will count sessions continuing into the next
 day as part of the previous one. It's just more convenient that way.
 
+## 2025-12-6 (plexsheep)
+
+I can only work on this project in my free time. I don't have a lot of that
+because of my actual job, and even then, I don't want to spend every free minute
+programming here. So excuse if this project currently sees rather slow progress.
+
 ## 2025-10-17 (plexsheep)
 
 ### Progress
