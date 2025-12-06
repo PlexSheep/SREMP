@@ -1,4 +1,4 @@
-use std::{char::MAX, sync::LazyLock};
+use std::sync::LazyLock;
 
 use snow::{TransportState, params::NoiseParams};
 use tokio::{io::AsyncWriteExt, net};
