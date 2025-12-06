@@ -1,4 +1,4 @@
-use std::sync::LazyLock;
+use std::{char::MAX, sync::LazyLock};
 
 use snow::{TransportState, params::NoiseParams};
 use tokio::{io::AsyncWriteExt, net};
@@ -10,7 +10,7 @@ use crate::{
 };
 
 mod frame;
-use frame::*;
+pub(crate) use frame::*;
 
 pub static NOISE_PARAMS: LazyLock<NoiseParams> = LazyLock::new(|| {
     "Noise_XX_25519_ChaChaPoly_BLAKE2s"
@@ -70,6 +70,13 @@ impl Connection {
 
     pub(crate) async fn send_direct_message(&mut self, data: &[u8]) -> CoreResult<()> {
         delegate!(self, send_direct_message(data).await)
+    }
+
+    pub(crate) async fn receive_direct_message(
+        &mut self,
+        receive_buffer: &mut Vec<u8>,
+    ) -> CoreResult<()> {
+        delegate!(self, receive_direct_message(receive_buffer).await)
     }
 }
 
@@ -230,7 +237,6 @@ impl P2PConnection {
     async fn send_direct_message(&mut self, data: &[u8]) -> CoreResult<()> {
         Self::dead_switch(&mut self.stream, async |tcp_stream| {
             log::debug!("Sending direct message to peer");
-            log::trace!("Input data:\n{data:#x?}");
 
             // NOTE: Will result in Error::Input if the size of the output exceeds the max message length in the Noise Protocol (65535 bytes).
             let len = self.transport.write_message(data, &mut *self.buffer)?;
@@ -238,6 +244,17 @@ impl P2PConnection {
             Frame::from_payload(&self.buffer[..len])?
                 .send(tcp_stream)
                 .await?;
+            Ok(())
+        })
+        .await
+    }
+
+    async fn receive_direct_message(&mut self, receiving_buffer: &mut Vec<u8>) -> CoreResult<()> {
+        Self::dead_switch(&mut self.stream, async |tcp_stream| {
+            let frame = Frame::recv(tcp_stream).await?;
+            log::debug!("Got a frame from {}", self.peer_identity.username());
+            receiving_buffer.clear();
+            receiving_buffer.extend_from_slice(frame.data());
             Ok(())
         })
         .await

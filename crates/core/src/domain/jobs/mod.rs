@@ -7,7 +7,7 @@ use crate::{
     domain::{ConnectionData, NetworkCommand, NetworkDomain, NetworkDomainSync, NetworkEvent},
     error::{CoreError, CoreResult},
     identity::UserIdentity,
-    net::connection::Connection,
+    net::connection::{Connection, MAX_FRAME_SIZE},
 };
 
 impl NetworkDomain {
@@ -90,6 +90,11 @@ impl NetworkDomain {
             }),
         };
 
+        let state_c = state.clone();
+        tokio::spawn(
+            async move { Self::process_incoming_frames_for_connection(state_c, remote).await },
+        );
+
         state
             .read()
             .await
@@ -162,5 +167,53 @@ impl NetworkDomain {
         Self::connect_from(state, stream, remote).await?;
 
         Ok(())
+    }
+
+    async fn process_incoming_frames_for_connection(
+        state: NetworkDomainSync,
+        remote: SocketAddr,
+    ) -> CoreResult<()> {
+        let mut receive_buff = Vec::with_capacity(MAX_FRAME_SIZE);
+        log::debug!("Started listening for frames from {remote}");
+        loop {
+            let mut state_b = state.write().await;
+            let conn = match state_b.active_connections.get_mut(&remote) {
+                Some(conn) => conn,
+                None => {
+                    log::warn!(
+                        "Active Connection to {remote} does not exist anymore, stopping listener job for this connection.",
+                    );
+                    return Ok(());
+                }
+            };
+            tokio::select! {
+                res = conn.conn.receive_direct_message(&mut receive_buff) => {
+                    log::debug!("Started listening for frames from {remote}");
+                    res?;
+                }
+                _ = tokio::time::sleep(tokio::time::Duration::from_millis(1)) => {
+                    drop(state_b);
+                    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+                    continue;
+                }
+            }
+
+            // TODO: we dont yet actually make any checks if the message is signed, authentic and
+            // so on. I think that should be done here?
+
+            // WARN: i'm not sure how select works. It would be bad if we got a message and
+            // the processing stopped because of some time limit.
+
+            let cid = conn.iden.id();
+            drop(state_b);
+            let copy_buf = Arc::new(receive_buff.clone());
+            state
+                .read()
+                .await
+                .send_net_evt(NetworkEvent::IncomingMessage(remote, cid, copy_buf))
+                .await;
+
+            tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+        }
     }
 }
