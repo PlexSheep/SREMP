@@ -50,7 +50,7 @@ impl ClientDomain {
     }
 
     pub(super) async fn process_net_event(&mut self, event: NetworkEvent) -> ClientResult<()> {
-        log::trace!("{}", current_function!());
+        trace_current_function!();
         log::info!("Processing Net Event: {event}");
         match event {
             NetworkEvent::ListenerStopped => self.send_ui_evt(UiEvent::ListenerStopped).await,
@@ -180,6 +180,7 @@ impl ClientDomain {
         id: ContactId,
         data: Arc<Vec<u8>>,
     ) -> CoreResult<()> {
+        trace_current_function!();
         let msg: Message = rmp_serde::from_slice(&data)?;
 
         self.chats.add_message(id.clone(), msg.into());

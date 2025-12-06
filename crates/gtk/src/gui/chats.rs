@@ -6,6 +6,7 @@ use sremp_client::domain::chats::Chats;
 use sremp_client::domain::known_identities::{KnownIdentities, SharedContact};
 use sremp_core::chat::Chat;
 use sremp_core::identity::ContactId;
+use sremp_core::trace_current_function;
 
 use crate::domain::UiDomainSync;
 use crate::gui::{label, widget_detailbar};
@@ -57,6 +58,7 @@ impl ChatList {
 
     // PERF: we probably should call this too often
     fn regenerate(&mut self) {
+        trace_current_function!();
         self.list = gtk::ListBox::builder()
             .selection_mode(gtk::SelectionMode::None)
             .build();
@@ -107,6 +109,7 @@ impl ChatList {
 
     #[inline]
     pub(crate) fn replace_chats(&mut self, chats: Chats) {
+        trace_current_function!();
         self.chats = chats;
         self.regenerate();
     }

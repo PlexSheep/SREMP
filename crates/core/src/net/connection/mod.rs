@@ -7,6 +7,7 @@ use crate::{
     current_function,
     error::{CoreError, CoreResult},
     identity::{Identity, UserIdentity},
+    trace_current_function,
 };
 
 mod frame;
@@ -77,6 +78,10 @@ impl Connection {
         receive_buffer: &mut Vec<u8>,
     ) -> CoreResult<()> {
         delegate!(self, receive_direct_message(receive_buffer).await)
+    }
+
+    pub(crate) async fn has_receive_pending(&self) -> CoreResult<bool> {
+        delegate!(self, has_receive_pending().await)
     }
 }
 
@@ -251,6 +256,7 @@ impl P2PConnection {
 
     async fn receive_direct_message(&mut self, receiving_buffer: &mut Vec<u8>) -> CoreResult<()> {
         Self::dead_switch(&mut self.stream, async |tcp_stream| {
+            log::trace!("Trying to receive a frame");
             let frame = Frame::recv(tcp_stream).await?;
             log::debug!("Got a frame from {}", self.peer_identity.username());
             receiving_buffer.clear();
@@ -258,6 +264,13 @@ impl P2PConnection {
             Ok(())
         })
         .await
+    }
+
+    async fn has_receive_pending(&self) -> CoreResult<bool> {
+        trace_current_function!();
+        let a = self.stream.peek(&mut [0; 1]).await? > 0;
+        log::trace!("has active pending: {a}");
+        Ok(a)
     }
 
     fn noise_builder<'a>(user: &'a UserIdentity) -> CoreResult<snow::Builder<'a>> {
