@@ -20,6 +20,11 @@ I can only work on this project in my free time. I don't have a lot of that
 because of my actual job, and even then, I don't want to spend every free minute
 programming here. So excuse if this project currently sees rather slow progress.
 
+### Progress
+
+- Direct Messages are now actually sent to the peer #44 #48 (but not yet received?)
+- Added stuff to core so that we actually do something with frames sent to us by the peers #44
+
 ## 2025-10-17 (plexsheep)
 
 ### Progress
