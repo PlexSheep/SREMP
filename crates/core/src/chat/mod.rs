@@ -1,6 +1,9 @@
 use std::net::SocketAddr;
 
-use crate::{chat::messages::SharedMessage, domain::NetworkDomain, identity::ContactIdentity};
+use crate::{
+    chat::messages::SharedMessage, domain::NetworkDomain, identity::ContactIdentity,
+    trace_current_function,
+};
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -26,6 +29,7 @@ impl Chat {
     }
 
     pub fn add_message(&mut self, msg: impl Into<SharedMessage>) {
+        trace_current_function!();
         self.messages.push(msg.into());
         self.sort();
     }

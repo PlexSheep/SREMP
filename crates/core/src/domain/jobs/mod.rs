@@ -8,6 +8,7 @@ use crate::{
     error::{CoreError, CoreResult},
     identity::UserIdentity,
     net::connection::{Connection, MAX_FRAME_SIZE},
+    trace_current_function,
 };
 
 impl NetworkDomain {
@@ -186,17 +187,21 @@ impl NetworkDomain {
                     return Ok(());
                 }
             };
-            tokio::select! {
-                res = conn.conn.receive_direct_message(&mut receive_buff) => {
-                    log::debug!("Started listening for frames from {remote}");
-                    res?;
-                }
-                _ = tokio::time::sleep(tokio::time::Duration::from_millis(1)) => {
-                    drop(state_b);
-                    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-                    continue;
-                }
+
+            if !conn.conn.has_receive_pending().await? {
+                drop(state_b);
+                tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+                continue;
             }
+            log::debug!("There is a pending message for {remote}");
+
+            conn.conn.receive_direct_message(&mut receive_buff).await?;
+            let cid = conn.iden.id();
+            log::debug!(
+                "Received a direct message from {remote} {} ({})",
+                cid,
+                conn.iden.username()
+            );
 
             // TODO: we dont yet actually make any checks if the message is signed, authentic and
             // so on. I think that should be done here?
@@ -204,7 +209,6 @@ impl NetworkDomain {
             // WARN: i'm not sure how select works. It would be bad if we got a message and
             // the processing stopped because of some time limit.
 
-            let cid = conn.iden.id();
             drop(state_b);
             let copy_buf = Arc::new(receive_buff.clone());
             state

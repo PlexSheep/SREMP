@@ -73,7 +73,9 @@ impl ClientDomain {
                 evt = this.net_event_channel().recv() => {
                     drop(this);
                     let evt = evt.map_err(CoreError::from)?;
-                    ssy.write().await.process_net_event(evt).await?;
+                    if let Err(err) = ssy.write().await.process_net_event(evt).await {
+                        log::error!("Error while processing network event: {err}");
+                    }
                 },
                 _ = tokio::time::sleep(tokio::time::Duration::from_millis(JOB_ITERATION_INTERVAL_MS)) => {
                     // WARN: not sure, but this might kill the execution of other branches?

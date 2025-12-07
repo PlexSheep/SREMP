@@ -267,10 +267,15 @@ impl P2PConnection {
     }
 
     async fn has_receive_pending(&self) -> CoreResult<bool> {
-        trace_current_function!();
-        let a = self.stream.peek(&mut [0; 1]).await? > 0;
-        log::trace!("has active pending: {a}");
-        Ok(a)
+        let mut sink = [0; 1];
+        tokio::select! {
+            a = self.stream.peek(&mut sink)  => {
+                Ok(a? > 0)
+            },
+            _ = tokio::time::sleep(tokio::time::Duration::from_millis(1)) => {
+                Ok(false)
+            }
+        }
     }
 
     fn noise_builder<'a>(user: &'a UserIdentity) -> CoreResult<snow::Builder<'a>> {
