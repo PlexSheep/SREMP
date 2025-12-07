@@ -7,7 +7,6 @@ use crate::{
     current_function,
     error::{CoreError, CoreResult},
     identity::{Identity, UserIdentity},
-    trace_current_function,
 };
 
 mod frame;

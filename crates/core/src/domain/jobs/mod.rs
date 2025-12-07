@@ -8,7 +8,6 @@ use crate::{
     error::{CoreError, CoreResult},
     identity::UserIdentity,
     net::connection::{Connection, MAX_FRAME_SIZE},
-    trace_current_function,
 };
 
 impl NetworkDomain {
