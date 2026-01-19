@@ -22,6 +22,8 @@ thiserror.workspace = true
 
 [dev-dependencies]
 fork.workspace = true
+ntest.workspace = true
+env_logger.workspace = true
 
 [lints]
 workspace = true
