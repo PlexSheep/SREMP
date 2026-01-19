@@ -20,5 +20,8 @@ rmp-serde.workspace = true
 sremp-core.workspace = true
 thiserror.workspace = true
 
+[dev-dependencies]
+fork.workspace = true
+
 [lints]
 workspace = true
