@@ -96,10 +96,7 @@ fn setup_identity(
 }
 
 /// Helper function to establish trust with a contact
-fn trust_contact(
-    cid: &sremp_core::identity::ContactId,
-    ui_tx: &async_channel::Sender<UiCommand>,
-) {
+fn trust_contact(cid: &sremp_core::identity::ContactId, ui_tx: &async_channel::Sender<UiCommand>) {
     ui_tx
         .send_blocking(UiCommand::TrustContact(
             cid.clone(),
