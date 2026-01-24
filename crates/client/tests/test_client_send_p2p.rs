@@ -22,7 +22,9 @@ fn ack_evt(evt: UiEvent) {
 }
 
 fn is_socket_bound_tcp(sock: &SocketAddr) -> bool {
-    std::net::TcpListener::bind(sock).is_ok()
+    let b = std::net::TcpListener::bind(sock).is_err();
+    info!("Socket {sock} is bound: {b}");
+    b
 }
 
 fn start_client(
@@ -95,11 +97,20 @@ fn test_client_send_p2p() {
                 .send_blocking(UiCommand::StartListener(lsock))
                 .unwrap();
             ack_evt(ui_rx.recv_blocking().unwrap());
-            wait(20); // assert will not work in many cases otherwise
 
+            // NOTE: we need to wait until we use is_socket_bound_tcp because it steals
+            // our socket otherwise
+            wait(100);
             assert!(is_socket_bound_tcp(&lsock));
 
             // TODO: assert that a connection is made
+
+            ack_evt(ui_rx.recv_blocking().unwrap()); // set identities
+            info!("Waiting for connection established event");
+            let evt = ui_rx.recv_blocking().unwrap();
+            assert!(matches!(evt, UiEvent::ConnectionEstablished(_, _)));
+            ack_evt(evt);
+
             // TODO: check and accept identity
             // TODO: message exchange
         }
@@ -120,6 +131,7 @@ fn test_client_send_p2p() {
 
             ui_tx.send_blocking(UiCommand::Connect(lsock)).unwrap();
             ack_evt(ui_rx.recv_blocking().unwrap());
+
             let evt = ui_rx.recv_blocking().unwrap();
             assert!(matches!(evt, UiEvent::ConnectionEstablished(_, _)));
             ack_evt(evt);
