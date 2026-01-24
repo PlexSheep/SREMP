@@ -1,15 +1,15 @@
-use std::{
-    io::Write,
-    net::{IpAddr, Ipv4Addr, SocketAddr, SocketAddrV4},
-    str::FromStr,
+use sremp_client::domain::{UiCommand, UiEvent};
+use sremp_core::{
+    chat::messages::{Message, SharedMessage},
+    identity::UserIdentity,
 };
 
-use env_logger::fmt::ConfigurableFormat;
-use log::info;
-use sremp_client::domain::{UiCommand, UiEvent};
-use sremp_core::identity::UserIdentity;
+use std::{net::SocketAddr, str::FromStr};
 
+use chrono::Utc;
+use env_logger::fmt::ConfigurableFormat;
 use fork::{Fork, fork};
+use log::{debug, info};
 use ntest::timeout;
 
 fn wait(dur: u64) {
@@ -17,7 +17,7 @@ fn wait(dur: u64) {
     std::thread::sleep(dur);
 }
 
-fn ack_evt(evt: UiEvent) {
+fn ack_evt(evt: &UiEvent) {
     info!("TEST ACK UiEvent {evt}");
 }
 
@@ -87,16 +87,16 @@ fn test_client_send_p2p() {
             let iden = UserIdentity::create("parent").unwrap();
 
             ui_tx
-                .send_blocking(UiCommand::SetIdentity(Some(iden.into())))
+                .send_blocking(UiCommand::SetIdentity(Some(iden.clone().into())))
                 .unwrap();
             // NOTE: set identity currently causes two events, the direct response and that the working copy was updated
-            ack_evt(ui_rx.recv_blocking().unwrap());
-            ack_evt(ui_rx.recv_blocking().unwrap());
+            ack_evt(&ui_rx.recv_blocking().unwrap());
+            ack_evt(&ui_rx.recv_blocking().unwrap());
 
             ui_tx
                 .send_blocking(UiCommand::StartListener(lsock))
                 .unwrap();
-            ack_evt(ui_rx.recv_blocking().unwrap());
+            ack_evt(&ui_rx.recv_blocking().unwrap());
 
             // NOTE: we need to wait until we use is_socket_bound_tcp because it steals
             // our socket otherwise
@@ -105,17 +105,57 @@ fn test_client_send_p2p() {
 
             // TODO: assert that a connection is made
 
-            ack_evt(ui_rx.recv_blocking().unwrap()); // set identities
+            ack_evt(&ui_rx.recv_blocking().unwrap()); // set identities
             info!("Waiting for connection established event");
             let evt = ui_rx.recv_blocking().unwrap();
-            assert!(matches!(evt, UiEvent::ConnectionEstablished(_, _)));
-            ack_evt(evt);
+            ack_evt(&evt);
+            if let UiEvent::ConnectionEstablished(remote_sock, cid) = evt {
+                assert_ne!(remote_sock, lsock);
 
-            // TODO: check and accept identity
-            // TODO: message exchange
+                // TODO: check and accept identity
+                // Now that we have established a connection and gotten their identity, we need to do
+                // trust-on-first use. For this test, we just set the identity to trusted.
+                ui_tx
+                    .send_blocking(UiCommand::TrustContact(
+                        cid.clone(),
+                        sremp_core::identity::Trust::Trusted,
+                    ))
+                    .unwrap();
+
+                info!("starting chat");
+                ui_tx
+                    .send_blocking(UiCommand::StartChat(cid.clone()))
+                    .unwrap();
+                ack_evt(&ui_rx.recv_blocking().unwrap());
+
+                info!("selecting chat");
+                ui_tx
+                    .send_blocking(UiCommand::SelectChat(cid.clone()))
+                    .unwrap();
+                ack_evt(&ui_rx.recv_blocking().unwrap());
+
+                info!("sending message");
+                let msg: SharedMessage =
+                    Message::new("your parents are worried", Utc::now(), iden.id()).into();
+
+                ui_tx
+                    .send_blocking(UiCommand::SendMessage(cid.clone(), msg))
+                    .unwrap();
+                ack_evt(&ui_rx.recv_blocking().unwrap());
+
+                info!("receiving message");
+                ack_evt(&ui_rx.recv_blocking().unwrap());
+
+                ui_tx
+                    .send_blocking(UiCommand::Disconnect(remote_sock))
+                    .unwrap();
+                ack_evt(&ui_rx.recv_blocking().unwrap());
+            } else {
+                panic!("No connection established?")
+            }
         }
         Fork::Child => {
-            setup_logging(Some(" | C \n"));
+            setup_logging(Some(" | C\n"));
             // NOTE: This runs as a test with cargo test. Cargo test does not care about the return
             // status of a child process, and why should it. But that means that an error here is
             // not necessarily treated as a failed test!
@@ -123,22 +163,64 @@ fn test_client_send_p2p() {
             let iden = UserIdentity::create("child").unwrap();
 
             ui_tx
-                .send_blocking(UiCommand::SetIdentity(Some(iden.into())))
+                .send_blocking(UiCommand::SetIdentity(Some(iden.clone().into())))
                 .unwrap();
             // NOTE: set identity currently causes two events, the direct response and that the working copy was updated
-            ack_evt(ui_rx.recv_blocking().unwrap());
-            ack_evt(ui_rx.recv_blocking().unwrap());
+            ack_evt(&ui_rx.recv_blocking().unwrap());
+            ack_evt(&ui_rx.recv_blocking().unwrap());
 
             ui_tx.send_blocking(UiCommand::Connect(lsock)).unwrap();
-            ack_evt(ui_rx.recv_blocking().unwrap());
-
+            ack_evt(&ui_rx.recv_blocking().unwrap()); // set identities
+            info!("Waiting for connection established event");
             let evt = ui_rx.recv_blocking().unwrap();
-            assert!(matches!(evt, UiEvent::ConnectionEstablished(_, _)));
-            ack_evt(evt);
+            ack_evt(&evt);
 
-            // TODO: assert that a connection is made
-            // TODO: check and accept identity
-            // TODO: message exchange
+            debug!("entering conn");
+            if let UiEvent::ConnectionEstablished(remote_sock, cid) = evt {
+                info!("in conn");
+                assert_eq!(remote_sock, lsock);
+
+                // TODO: check and accept identity
+                // Now that we have established a connection and gotten their identity, we need to do
+                // trust-on-first use. For this test, we just set the identity to trusted.
+                ui_tx
+                    .send_blocking(UiCommand::TrustContact(
+                        cid.clone(),
+                        sremp_core::identity::Trust::Trusted,
+                    ))
+                    .unwrap();
+
+                info!("starting chat");
+                ui_tx
+                    .send_blocking(UiCommand::StartChat(cid.clone()))
+                    .unwrap();
+                ack_evt(&ui_rx.recv_blocking().unwrap());
+
+                info!("selecting chat");
+                ui_tx
+                    .send_blocking(UiCommand::SelectChat(cid.clone()))
+                    .unwrap();
+                ack_evt(&ui_rx.recv_blocking().unwrap());
+
+                info!("receiving message");
+                ack_evt(&ui_rx.recv_blocking().unwrap());
+
+                info!("sending message");
+                let msg: SharedMessage =
+                    Message::new("your parents are worried", Utc::now(), iden.id()).into();
+
+                ui_tx
+                    .send_blocking(UiCommand::SendMessage(cid.clone(), msg))
+                    .unwrap();
+                ack_evt(&ui_rx.recv_blocking().unwrap());
+
+                ui_tx
+                    .send_blocking(UiCommand::Disconnect(remote_sock))
+                    .unwrap();
+                ack_evt(&ui_rx.recv_blocking().unwrap());
+            } else {
+                panic!("No connection established?")
+            }
         }
     }
     wait(20);

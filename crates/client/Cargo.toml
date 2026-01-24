@@ -19,6 +19,7 @@ async-channel.workspace = true
 rmp-serde.workspace = true
 sremp-core.workspace = true
 thiserror.workspace = true
+chrono.workspace = true
 
 [dev-dependencies]
 fork.workspace = true
