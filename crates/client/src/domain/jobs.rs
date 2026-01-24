@@ -54,7 +54,7 @@ impl ClientDomain {
         log::info!("Processing Net Event: {event}");
         match event {
             NetworkEvent::ListenerStopped => self.send_ui_evt(UiEvent::ListenerStopped).await,
-            NetworkEvent::ListenerFailed(core_error) => todo!(),
+            NetworkEvent::ListenerFailed(_core_error) => todo!(),
             NetworkEvent::ListenerStarted(addr) => {
                 self.send_ui_evt(UiEvent::ListenerStarted(addr)).await
             }
