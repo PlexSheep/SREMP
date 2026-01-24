@@ -1568,6 +1568,7 @@ name = "sremp-client"
 version = "0.1.0"
 dependencies = [
  "async-channel",
+ "chrono",
  "env_logger",
  "fork",
  "log",
