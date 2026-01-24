@@ -13,7 +13,7 @@ use fork::{Fork, fork};
 use ntest::timeout;
 
 fn wait(dur: u64) {
-    let dur = std::time::Duration::from_mins(dur);
+    let dur = std::time::Duration::from_millis(dur);
     std::thread::sleep(dur);
 }
 
@@ -95,7 +95,7 @@ fn test_client_send_p2p() {
                 .send_blocking(UiCommand::StartListener(lsock))
                 .unwrap();
             ack_evt(ui_rx.recv_blocking().unwrap());
-            wait(1); // assert will not work in many cases otherwise
+            wait(20); // assert will not work in many cases otherwise
 
             assert!(is_socket_bound_tcp(&lsock));
 
@@ -120,6 +120,9 @@ fn test_client_send_p2p() {
 
             ui_tx.send_blocking(UiCommand::Connect(lsock)).unwrap();
             ack_evt(ui_rx.recv_blocking().unwrap());
+            let evt = ui_rx.recv_blocking().unwrap();
+            assert!(matches!(evt, UiEvent::ConnectionEstablished(_, _)));
+            ack_evt(evt);
 
             // TODO: assert that a connection is made
             // TODO: check and accept identity
