@@ -35,8 +35,7 @@ impl Display for NetworkEvent {
                 Self::ListenerStarted(addr) =>
                     format!("Listener for incoming connection was started on {addr}"),
                 Self::ListenerStopped => "Listener for incoming connection was stopped".to_string(),
-                Self::ConnectionReset(addr) =>
-                    format!("Bad connection awards from {addr} was aborted",),
+                Self::ConnectionReset(addr) => format!("Bad connection from {addr} was aborted",),
                 Self::ListenerFailed(err) => format!("Listener failed: {err}"),
             }
         )
