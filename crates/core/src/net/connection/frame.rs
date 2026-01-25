@@ -12,7 +12,7 @@ pub use version_header::*;
 
 pub const MAX_FRAME_SIZE: usize = 65535;
 #[allow(clippy::cast_possible_truncation)]
-pub const FRAME_OVERHEAD: u16 = u16::BITS as u16 / 2u16 // 2 bytes for the length of the frame
+pub const FRAME_OVERHEAD: u16 = (u16::BITS as u16 / 8u16) // 2 bytes for the length of the payload
         + VersionHeader::BYTE_LENGTH as u16 // 14 bytes for the version of the protocol used
 ;
 pub const MAX_FRAME_PAYLOAD_SIZE: usize = MAX_FRAME_SIZE - FRAME_OVERHEAD as usize;
