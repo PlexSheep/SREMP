@@ -4,7 +4,6 @@ use snow::{TransportState, params::NoiseParams};
 use tokio::{io::AsyncWriteExt, net};
 
 use crate::{
-    current_function,
     error::{CoreError, CoreResult},
     identity::{Identity, UserIdentity},
 };

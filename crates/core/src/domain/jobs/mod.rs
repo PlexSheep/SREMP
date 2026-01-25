@@ -3,7 +3,6 @@ use std::{collections::hash_map::Entry, net::SocketAddr, sync::Arc};
 use tokio::net;
 
 use crate::{
-    current_function,
     domain::{ConnectionData, NetworkCommand, NetworkDomain, NetworkDomainSync, NetworkEvent},
     error::{CoreError, CoreResult},
     identity::UserIdentity,

@@ -16,7 +16,7 @@ pub(crate) use active_connections::*;
 pub use commands::NetworkCommand;
 pub use events::NetworkEvent;
 
-use crate::{current_function, error::CoreResult, identity::UserIdentity};
+use crate::{error::CoreResult, identity::UserIdentity};
 
 pub type NetworkDomainSync = Arc<tokio::sync::RwLock<NetworkDomain>>;
 

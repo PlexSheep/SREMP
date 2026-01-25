@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::CoreResult;
 use crate::identity::ContactId;
-use crate::{ser_helper::*, trace_current_function};
+use crate::ser_helper::*;
 
 pub type MessageID = u32;
 

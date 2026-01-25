@@ -2,11 +2,9 @@ use std::{net::SocketAddr, sync::Arc};
 
 use sremp_core::{
     chat::messages::{Message, SharedMessage},
-    current_function,
     domain::{NetworkCommand, NetworkEvent},
     error::{CoreError, CoreResult},
     identity::{ContactId, ContactIdentity, UserIdentity},
-    trace_current_function,
 };
 
 use crate::{
