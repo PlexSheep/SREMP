@@ -18,6 +18,13 @@ fn wait(dur: u64) {
     std::thread::sleep(dur);
 }
 
+fn killtimer(dur: u64) {
+    std::thread::spawn(move || {
+        wait(dur);
+        std::process::abort()
+    });
+}
+
 fn is_socket_bound_tcp(sock: &SocketAddr) -> bool {
     let b = std::net::TcpListener::bind(sock).is_err();
     info!("Socket {sock} is bound: {b}");
@@ -144,6 +151,7 @@ fn test_client_connect_exchange_disconnect() {
     let lsock: SocketAddr = SocketAddr::from_str("127.0.0.1:31048").unwrap();
 
     let role = fork().unwrap();
+    killtimer(600);
 
     let mut rt = tokio::runtime::Runtime::new().expect("could not create tokio runtime");
     let (ui_tx, ui_rx) = start_client(&mut rt);
