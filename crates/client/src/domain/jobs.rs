@@ -16,7 +16,6 @@ use crate::{
 
 impl ClientDomain {
     pub(super) async fn process_ui_command(&mut self, command: UiCommand) -> ClientResult<()> {
-        log::trace!("{}", current_function!());
         log::info!("Processing Ui Command: {command}");
         match command {
             UiCommand::StopListener => self.listener_stop().await,
@@ -50,7 +49,6 @@ impl ClientDomain {
     }
 
     pub(super) async fn process_net_event(&mut self, event: NetworkEvent) -> ClientResult<()> {
-        trace_current_function!();
         log::info!("Processing Net Event: {event}");
         match event {
             NetworkEvent::ListenerStopped => self.send_ui_evt(UiEvent::ListenerStopped).await,
@@ -90,7 +88,6 @@ impl ClientDomain {
     }
 
     pub(crate) async fn listener_stop(&self) -> ClientResult<()> {
-        log::trace!("{}", current_function!());
         self.net_command_channel()
             .send(NetworkCommand::StopListener)
             .await
@@ -99,7 +96,6 @@ impl ClientDomain {
     }
 
     pub(crate) async fn listener_start(&self, addr: SocketAddr) -> ClientResult<()> {
-        log::trace!("{}", current_function!());
         self.net_command_channel()
             .send(NetworkCommand::StartListener(addr))
             .await
@@ -108,7 +104,6 @@ impl ClientDomain {
     }
 
     pub(crate) async fn connect(&self, addr: SocketAddr) -> ClientResult<()> {
-        log::trace!("{}", current_function!());
         self.net_command_channel()
             .send(NetworkCommand::Connect(addr))
             .await
@@ -117,7 +112,6 @@ impl ClientDomain {
     }
 
     pub(crate) async fn disconnect(&self, addr: SocketAddr) -> ClientResult<()> {
-        log::trace!("{}", current_function!());
         self.net_command_channel()
             .send(NetworkCommand::Disconnect(addr))
             .await
@@ -129,7 +123,6 @@ impl ClientDomain {
         &mut self,
         iden: Option<Arc<UserIdentity>>,
     ) -> ClientResult<()> {
-        log::trace!("{}", current_function!());
         self.user_identity = iden.clone();
 
         // we must have the local user identity in the known identities.
@@ -153,7 +146,6 @@ impl ClientDomain {
     }
 
     pub(crate) async fn send_message(&self, to: ContactId, msg: SharedMessage) -> ClientResult<()> {
-        trace_current_function!();
         log::trace!("formatting message for wire");
         let data: Arc<Vec<u8>> = Arc::new(msg.to_wire());
         log::trace!("getting open connection");
@@ -180,7 +172,6 @@ impl ClientDomain {
         id: ContactId,
         data: Arc<Vec<u8>>,
     ) -> CoreResult<()> {
-        trace_current_function!();
         let msg: Message = Message::from_wire(&data)?;
 
         self.chats.add_message(id.clone(), msg.into());

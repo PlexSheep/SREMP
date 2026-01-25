@@ -15,7 +15,6 @@ impl NetworkDomain {
         state: NetworkDomainSync,
         command: NetworkCommand,
     ) -> CoreResult<()> {
-        log::trace!("{}", current_function!());
         log::info!("Processing Network Command: {command}");
         match command {
             NetworkCommand::Connect(remote) => Self::connect_to(state.clone(), remote).await?,
@@ -58,17 +57,8 @@ impl NetworkDomain {
                 // deserializeable Message and not some crap data
                 #[cfg(debug_assertions)]
                 {
-                    use crate::chat::messages::Message;
-
-                    log::trace!(
-                        "Checking that the message we're sending (wire {} bytes) can be deserialized",
-                        data.len()
-                    );
-                    let msg = Message::from_wire(&data).expect("could not deserialize the message we are about to send. The message must be bad!");
-                    drop(msg);
-                    log::trace!(
-                        "The message we're about to send could be deserialized. If it survives the transportation, our peer should be able to deserialize it too!"
-                    );
+                    let _msg = crate::chat::messages::Message::from_wire(&data)
+                        .expect("could not deserialize the message we are about to send. The message must be bad!");
                 }
 
                 condat.conn.send_direct_message(&data).await?;
@@ -83,7 +73,6 @@ impl NetworkDomain {
         remote: SocketAddr,
         connection: Connection,
     ) -> CoreResult<()> {
-        log::trace!("{}", current_function!());
         let remote_identity = connection.peer_identity().await.clone();
 
         match state.write().await.active_connections.entry(remote) {
@@ -132,7 +121,6 @@ impl NetworkDomain {
     }
 
     async fn connect_to(state: NetworkDomainSync, remote: SocketAddr) -> CoreResult<()> {
-        log::trace!("{}", current_function!());
         let connection = {
             let state_b = state.read().await;
             let user_identity = state_b.identity()?;
@@ -146,7 +134,6 @@ impl NetworkDomain {
         stream: net::TcpStream,
         remote: SocketAddr,
     ) -> CoreResult<()> {
-        log::trace!("{}", current_function!());
         let connection = {
             let state_b = state.read().await;
             let user_identity = state_b.identity()?;
@@ -156,7 +143,6 @@ impl NetworkDomain {
     }
 
     async fn listen(&mut self, listen_addr: SocketAddr) -> CoreResult<()> {
-        log::trace!("{}", current_function!());
         if self.listener.is_some() {
             let msg = "tried to start listening, but a listener already exists!";
             log::error!("{msg}");
@@ -178,7 +164,6 @@ impl NetworkDomain {
         stream: net::TcpStream,
         remote: SocketAddr,
     ) -> CoreResult<()> {
-        log::trace!("{}", current_function!());
         log::info!("Handling incoming connection from {remote}");
 
         Self::connect_from(state, stream, remote).await?;

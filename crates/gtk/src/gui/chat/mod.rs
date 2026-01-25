@@ -51,13 +51,11 @@ impl ChatView {
 
     #[inline]
     pub(crate) fn set_chat(&mut self, chat: Option<Chat>) {
-        trace_current_function!();
         self.chat = chat;
         self.regenerate();
     }
 
     fn regenerate(&mut self) {
-        trace_current_function!();
         log::trace!("chat of chat view is: {:#?}", self.chat);
         self.list = gtk::ListBox::builder()
             .vexpand(true)

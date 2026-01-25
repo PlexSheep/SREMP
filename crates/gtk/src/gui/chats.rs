@@ -58,7 +58,6 @@ impl ChatList {
 
     // PERF: we probably should call this too often
     fn regenerate(&mut self) {
-        trace_current_function!();
         self.list = gtk::ListBox::builder()
             .selection_mode(gtk::SelectionMode::None)
             .build();
@@ -109,7 +108,6 @@ impl ChatList {
 
     #[inline]
     pub(crate) fn replace_chats(&mut self, chats: Chats) {
-        trace_current_function!();
         self.chats = chats;
         self.regenerate();
     }

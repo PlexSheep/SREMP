@@ -107,7 +107,6 @@ impl Message {
 
     #[inline]
     pub fn to_wire(&self) -> Vec<u8> {
-        trace_current_function!();
         rmp_serde::to_vec(self).expect("could not serialize Message")
     }
 }

@@ -80,7 +80,6 @@ impl NetworkDomain {
     }
 
     async fn run(self) -> CoreResult<()> {
-        log::trace!("{}", current_function!());
         let ssy = self.into_sync();
         loop {
             let this = ssy.read().await;

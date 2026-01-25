@@ -21,9 +21,7 @@ impl UiDomain {
         self.listen_status = ListenerStatus::Starting;
     }
     pub(crate) fn fmt_listen_status(&self) -> String {
-        let s = self.listen_status.to_string();
-        log::trace!("{} -> {s:?}", current_function!());
-        s
+        self.listen_status.to_string()
     }
 }
 

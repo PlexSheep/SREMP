@@ -29,7 +29,6 @@ impl Chat {
     }
 
     pub fn add_message(&mut self, msg: impl Into<SharedMessage>) {
-        trace_current_function!();
         self.messages.push(msg.into());
         self.sort();
     }
