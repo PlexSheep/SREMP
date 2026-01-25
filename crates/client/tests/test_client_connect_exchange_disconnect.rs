@@ -1,7 +1,8 @@
+use async_channel::{Receiver, Sender};
 use sremp_client::domain::{UiCommand, UiEvent};
 use sremp_core::{
     chat::messages::{Message, SharedMessage},
-    identity::UserIdentity,
+    identity::{ContactId, UserIdentity},
 };
 
 use std::{net::SocketAddr, str::FromStr};
@@ -23,12 +24,7 @@ fn is_socket_bound_tcp(sock: &SocketAddr) -> bool {
     b
 }
 
-fn start_client(
-    rt: &mut tokio::runtime::Runtime,
-) -> (
-    async_channel::Sender<UiCommand>,
-    async_channel::Receiver<UiEvent>,
-) {
+fn start_client(rt: &mut tokio::runtime::Runtime) -> (Sender<UiCommand>, Receiver<UiEvent>) {
     let (net_command_tx, net_command_rx) = async_channel::unbounded();
     let (net_event_tx, net_event_rx) = async_channel::unbounded();
 
@@ -74,13 +70,72 @@ macro_rules! assert_event {
     };
 }
 
+fn prepare_for_chat(cid: ContactId, ui_tx: &Sender<UiCommand>, ui_rx: &Receiver<UiEvent>) {
+    info!("starting chat");
+    ui_tx
+        .send_blocking(UiCommand::StartChat(cid.clone()))
+        .unwrap();
+    assert_event!(&ui_rx.recv_blocking().unwrap(), UiEvent::LoadedChats(_));
+
+    info!("selecting chat");
+    ui_tx
+        .send_blocking(UiCommand::SelectChat(cid.clone()))
+        .unwrap();
+    assert_event!(&ui_rx.recv_blocking().unwrap(), UiEvent::OpenChat(_));
+}
+
+fn get_identity(ui_tx: &Sender<UiCommand>, ui_rx: &Receiver<UiEvent>) -> UserIdentity {
+    let iden = UserIdentity::create("parent").unwrap();
+
+    ui_tx
+        .send_blocking(UiCommand::SetIdentity(Some(iden.clone().into())))
+        .unwrap();
+    // NOTE: set identity currently causes two events, the direct response and that the working copy was updated
+    assert_event!(
+        &ui_rx.recv_blocking().unwrap(),
+        UiEvent::SetKnownIdentities(_)
+    );
+    assert_event!(&ui_rx.recv_blocking().unwrap(), UiEvent::IdentitySet(_));
+
+    iden
+}
+
+fn send_msg(
+    msg: &str,
+    iden: &UserIdentity,
+    cid: ContactId,
+    ui_tx: &Sender<UiCommand>,
+    ui_rx: &Receiver<UiEvent>,
+) {
+    info!("sending message");
+    let msg: SharedMessage = Message::new(msg, Utc::now(), iden.id()).into();
+
+    ui_tx
+        .send_blocking(UiCommand::SendMessage(cid.clone(), msg))
+        .unwrap();
+    assert_event!(
+        &ui_rx.recv_blocking().unwrap(),
+        UiEvent::MessageSent(_, _, _)
+    );
+}
+
+fn disconnect(remote_sock: SocketAddr, ui_tx: &Sender<UiCommand>, ui_rx: &Receiver<UiEvent>) {
+    ui_tx
+        .send_blocking(UiCommand::Disconnect(remote_sock))
+        .unwrap();
+    assert_event!(
+        &ui_rx.recv_blocking().unwrap(),
+        UiEvent::ConnectionLost(_, _)
+    );
+}
+
 // NOTE: This is the first time I'm doing automated testing for client functionality with fork().
 // The idea is that i have two processes that run my test code to talk over a loopback socket, but
 // i'm not sure if that actually works for tests like this. I guess i can call this an integration
 // test?
 #[test]
 #[timeout(500)]
-fn test_client_send_p2p() {
+fn test_client_connect_exchange_disconnect() {
     // surely nobody uses that specific port
     let lsock: SocketAddr = SocketAddr::from_str("127.0.0.1:31048").unwrap();
 
@@ -91,17 +146,8 @@ fn test_client_send_p2p() {
     match role {
         Fork::Parent(_) => {
             setup_logging(Some(" | P\n"));
-            let iden = UserIdentity::create("parent").unwrap();
 
-            ui_tx
-                .send_blocking(UiCommand::SetIdentity(Some(iden.clone().into())))
-                .unwrap();
-            // NOTE: set identity currently causes two events, the direct response and that the working copy was updated
-            assert_event!(
-                &ui_rx.recv_blocking().unwrap(),
-                UiEvent::SetKnownIdentities(_)
-            );
-            assert_event!(&ui_rx.recv_blocking().unwrap(), UiEvent::IdentitySet(_));
+            let iden = get_identity(&ui_tx, &ui_rx);
 
             ui_tx
                 .send_blocking(UiCommand::StartListener(lsock))
@@ -132,29 +178,9 @@ fn test_client_send_p2p() {
                     ))
                     .unwrap();
 
-                info!("starting chat");
-                ui_tx
-                    .send_blocking(UiCommand::StartChat(cid.clone()))
-                    .unwrap();
-                assert_event!(&ui_rx.recv_blocking().unwrap(), UiEvent::LoadedChats(_));
+                prepare_for_chat(cid.clone(), &ui_tx, &ui_rx);
 
-                info!("selecting chat");
-                ui_tx
-                    .send_blocking(UiCommand::SelectChat(cid.clone()))
-                    .unwrap();
-                assert_event!(&ui_rx.recv_blocking().unwrap(), UiEvent::OpenChat(_));
-
-                info!("sending message");
-                let msg: SharedMessage =
-                    Message::new("your parents are worried", Utc::now(), iden.id()).into();
-
-                ui_tx
-                    .send_blocking(UiCommand::SendMessage(cid.clone(), msg))
-                    .unwrap();
-                assert_event!(
-                    &ui_rx.recv_blocking().unwrap(),
-                    UiEvent::MessageSent(_, _, _)
-                );
+                send_msg("Wer das liest ist doof", &iden, cid, &ui_tx, &ui_rx);
 
                 info!("receiving message");
                 assert_event!(
@@ -162,13 +188,7 @@ fn test_client_send_p2p() {
                     UiEvent::SetKnownIdentities(_)
                 );
 
-                ui_tx
-                    .send_blocking(UiCommand::Disconnect(remote_sock))
-                    .unwrap();
-                assert_event!(
-                    &ui_rx.recv_blocking().unwrap(),
-                    UiEvent::ConnectionLost(_, _)
-                );
+                disconnect(remote_sock, &ui_tx, &ui_rx);
             } else {
                 unreachable!()
             }
@@ -179,17 +199,7 @@ fn test_client_send_p2p() {
             // status of a child process, and why should it. But that means that an error here is
             // not necessarily treated as a failed test!
 
-            let iden = UserIdentity::create("child").unwrap();
-
-            ui_tx
-                .send_blocking(UiCommand::SetIdentity(Some(iden.clone().into())))
-                .unwrap();
-            // NOTE: set identity currently causes two events, the direct response and that the working copy was updated
-            assert_event!(
-                &ui_rx.recv_blocking().unwrap(),
-                UiEvent::SetKnownIdentities(_)
-            );
-            assert_event!(&ui_rx.recv_blocking().unwrap(), UiEvent::IdentitySet(_));
+            let iden = get_identity(&ui_tx, &ui_rx);
 
             ui_tx.send_blocking(UiCommand::Connect(lsock)).unwrap();
 
@@ -212,44 +222,23 @@ fn test_client_send_p2p() {
                     ))
                     .unwrap();
 
-                info!("starting chat");
-                ui_tx
-                    .send_blocking(UiCommand::StartChat(cid.clone()))
-                    .unwrap();
-                assert_event!(&ui_rx.recv_blocking().unwrap(), UiEvent::LoadedChats(_));
-
-                info!("selecting chat");
-                ui_tx
-                    .send_blocking(UiCommand::SelectChat(cid.clone()))
-                    .unwrap();
-                assert_event!(&ui_rx.recv_blocking().unwrap(), UiEvent::OpenChat(_));
+                prepare_for_chat(cid.clone(), &ui_tx, &ui_rx);
 
                 info!("receiving message");
                 assert_event!(&ui_rx.recv_blocking().unwrap(), UiEvent::LoadedChats(_));
 
-                info!("sending message");
-                let msg: SharedMessage =
-                    Message::new("your parents are worried", Utc::now(), iden.id()).into();
-
-                ui_tx
-                    .send_blocking(UiCommand::SendMessage(cid.clone(), msg))
-                    .unwrap();
-                assert_event!(
-                    &ui_rx.recv_blocking().unwrap(),
-                    UiEvent::MessageSent(_, _, _)
+                send_msg(
+                    "hallo 👉👈 富士山はロボトですか。",
+                    &iden,
+                    cid,
+                    &ui_tx,
+                    &ui_rx,
                 );
 
-                ui_tx
-                    .send_blocking(UiCommand::Disconnect(remote_sock))
-                    .unwrap();
-                assert_event!(
-                    &ui_rx.recv_blocking().unwrap(),
-                    UiEvent::ConnectionLost(_, _)
-                );
+                disconnect(remote_sock, &ui_tx, &ui_rx);
             } else {
-                panic!("No connection established?")
+                unreachable!()
             }
         }
     }
-    wait(20);
 }
