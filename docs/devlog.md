@@ -14,6 +14,25 @@ project.
 Also, since I'm a night person, I will count sessions continuing into the next
 day as part of the previous one. It's just more convenient that way.
 
+## 2026-01-25 (plexsheep)
+
+I'm working on this sometimes, when i feel like it, and i have not forgotten
+it. Today I've managed to get something working I have been working on on-off
+over more than a week, i think? And that is something which also helps a lot
+with motivation.
+
+You see, previously, I had to manually start sremp-gtk two times, make the
+inputs to create an identity, connect the clients, send some messages, and then
+read the logs about why the hell it didn't work.
+
+Now i present: `test_client_connect_exchange_disconnect` (amazing name, i know).
+This test runs in `cargo test` and does all that automatically (without
+actually using the gtk gui, just testing `sremp-core` and `sremp-gtk`). It's
+basically a tiny headless client that only does one thing. This was pretty
+complicated, because I needed to test the ui events i got (wrote a macro for
+that), and need a second process to act as the other client (using fork in
+a test is weird but works).
+
 ## 2025-12-6 (plexsheep)
 
 I can only work on this project in my free time. I don't have a lot of that
