@@ -244,6 +244,7 @@ impl P2PConnection {
 
             // NOTE: Will result in Error::Input if the size of the output exceeds the max message length in the Noise Protocol (65535 bytes).
             let len = self.transport.write_message(data, &mut *self.buffer)?;
+            debug_assert_eq!(self.buffer[..len].len(), len);
 
             Frame::from_payload(&self.buffer[..len])?
                 .send(tcp_stream)

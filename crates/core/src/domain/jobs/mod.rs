@@ -54,6 +54,23 @@ impl NetworkDomain {
                     panic!("connection identity does not match our entries somehow")
                 }
 
+                // Here we make sure that whatever data we want to send is an actually
+                // deserializeable Message and not some crap data
+                #[cfg(debug_assertions)]
+                {
+                    use crate::chat::messages::Message;
+
+                    log::trace!(
+                        "Checking that the message we're sending (wire {} bytes) can be deserialized",
+                        data.len()
+                    );
+                    let msg = Message::from_wire(&data).expect("could not deserialize the message we are about to send. The message must be bad!");
+                    drop(msg);
+                    log::trace!(
+                        "The message we're about to send could be deserialized. If it survives the transportation, our peer should be able to deserialize it too!"
+                    );
+                }
+
                 condat.conn.send_direct_message(&data).await?;
             }
             _ => todo!(),
