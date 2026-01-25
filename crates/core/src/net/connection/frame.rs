@@ -51,8 +51,8 @@ impl Frame {
 
     pub async fn send(self, stream: &mut net::TcpStream) -> CoreResult<()> {
         log::debug!("Sending Frame");
-        log::trace!("Sending Payload-Length: {}", self.len());
-        stream.write_u16(self.len()).await?;
+        log::trace!("Sending Payload-Length: {}", self.payload_len());
+        stream.write_u16(self.payload_len()).await?;
 
         log::trace!("Sending version: {}", self.version());
         stream.write_all(self.version().as_bytes()).await?;
@@ -93,7 +93,7 @@ impl Frame {
 
     #[inline(always)]
     #[allow(clippy::cast_possible_truncation)]
-    pub fn len(&self) -> u16 {
+    pub fn payload_len(&self) -> u16 {
         self.data.len() as u16 // cannot construct a frame that is too big
     }
 

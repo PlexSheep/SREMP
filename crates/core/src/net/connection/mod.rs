@@ -267,6 +267,12 @@ impl P2PConnection {
             );
 
             receiving_buffer.clear();
+            log::trace!(
+                "Data to be encrypted ({} bytes): {:02x?}",
+                frame.payload_len(),
+                frame.data()
+            );
+            // BUG: decrypt error here, even though seemingly it should decrypt just fine?
             self.transport
                 .read_message(frame.data(), receiving_buffer)?;
             Ok(())
