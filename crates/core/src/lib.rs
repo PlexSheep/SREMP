@@ -42,7 +42,7 @@ macro_rules! current_function {
             std::any::type_name::<T>()
         }
         let name = type_name_of(f);
-        &name[..name.len() - 3]
+        &name[..name.len() - 16]
     }};
 }
 
