@@ -65,7 +65,7 @@ impl Connection {
     }
 
     pub(crate) async fn peer_identity(&self) -> &Identity {
-        delegate!(self, peer_identity().await)
+        delegate!(self, peer_identity())
     }
 
     pub(crate) async fn send_direct_message(&mut self, data: &[u8]) -> CoreResult<()> {
@@ -216,7 +216,7 @@ impl P2PConnection {
         Ok(())
     }
 
-    async fn peer_identity(&self) -> &Identity {
+    fn peer_identity(&self) -> &Identity {
         &self.peer_identity
     }
 
@@ -240,7 +240,10 @@ impl P2PConnection {
 
     async fn send_direct_message(&mut self, data: &[u8]) -> CoreResult<()> {
         Self::dead_switch(&mut self.stream, async |tcp_stream| {
-            log::debug!("Sending direct message to peer");
+            log::debug!(
+                "Sending direct message to peer \"{}\"",
+                self.peer_identity.username()
+            );
 
             // NOTE: Will result in Error::Input if the size of the output exceeds the max message length in the Noise Protocol (65535 bytes).
             let len = self.transport.write_message(data, &mut *self.buffer)?;
@@ -258,7 +261,10 @@ impl P2PConnection {
         Self::dead_switch(&mut self.stream, async |tcp_stream| {
             log::trace!("Trying to receive a frame");
             let frame = Frame::recv(tcp_stream).await?;
-            log::debug!("Got a frame from {}", self.peer_identity.username());
+            log::debug!(
+                "Got a frame from peer \"{}\"",
+                self.peer_identity.username()
+            );
 
             receiving_buffer.clear();
             self.transport
