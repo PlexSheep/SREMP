@@ -47,9 +47,13 @@ fn start_client(rt: &mut tokio::runtime::Runtime) -> (Sender<UiCommand>, Receive
 fn setup_logging(prefix: Option<&'static str>) {
     let mut l = env_logger::builder();
 
-    l.filter_level(log::LevelFilter::Info);
+    l.filter_level(log::LevelFilter::Trace);
 
     let mut fmt = ConfigurableFormat::default();
+    fmt.line_number(true)
+        .timestamp(None)
+        .module_path(false)
+        .target(true);
     if let Some(prefix) = prefix {
         fmt.suffix(prefix);
     }

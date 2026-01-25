@@ -47,13 +47,13 @@ impl Frame {
 
     pub async fn send(self, stream: &mut net::TcpStream) -> CoreResult<()> {
         log::debug!("Sending Frame");
-        log::trace!("Sending Length");
+        log::trace!("Sending Length: {}", self.len());
         stream.write_u16(self.len()).await?;
 
-        log::trace!("Sending version");
-        stream.write_all(self.version.as_bytes()).await?;
+        log::trace!("Sending version: {}", self.version());
+        stream.write_all(self.version().as_bytes()).await?;
         stream.flush().await?;
-        log::trace!("Sending Data");
+        log::trace!("Sending Data: {:x?}", self.data);
         stream.write_all(&self.data).await?;
         stream.flush().await?;
 

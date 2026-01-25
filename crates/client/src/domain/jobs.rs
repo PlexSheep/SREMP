@@ -157,7 +157,7 @@ impl ClientDomain {
         log::trace!("formatting message for wire");
         let data: Arc<Vec<u8>> = Arc::new(msg.to_wire());
         log::trace!("getting open connection");
-        // BUG: open_connections is never filled, so this always errors
+
         let remote = match self.open_connections.get(&to) {
             Some(r) => {
                 log::trace!("open connection exists! {r}");
@@ -181,7 +181,7 @@ impl ClientDomain {
         data: Arc<Vec<u8>>,
     ) -> CoreResult<()> {
         trace_current_function!();
-        let msg: Message = rmp_serde::from_slice(&data)?;
+        let msg: Message = Message::from_wire(&data)?;
 
         self.chats.add_message(id.clone(), msg.into());
 
