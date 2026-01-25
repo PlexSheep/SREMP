@@ -191,7 +191,7 @@ impl P2PConnection {
         let frame = Frame::recv(stream).await?;
         len = transport.read_message(frame.data(), buf)?;
         let peer_identity: Identity = rmp_serde::from_slice(&buf[..len])?;
-        log::debug!("Received (unverified) Identity: {peer_identity:#?}");
+        log::debug!("Received (unverified) Identity: {}", peer_identity.id());
 
         peer_identity.verify()?;
 
@@ -267,11 +267,6 @@ impl P2PConnection {
             );
 
             receiving_buffer.clear();
-            log::trace!(
-                "Data to be encrypted ({} bytes): {:02x?}",
-                frame.payload_len(),
-                frame.data()
-            );
             // BUG: decrypt error here, even though seemingly it should decrypt just fine?
             self.transport
                 .read_message(frame.data(), receiving_buffer)?;

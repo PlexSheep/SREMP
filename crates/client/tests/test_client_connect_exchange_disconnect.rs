@@ -82,13 +82,13 @@ macro_rules! assert_event {
 }
 
 fn prepare_for_chat(cid: ContactId, ui_tx: &Sender<UiCommand>, ui_rx: &Receiver<UiEvent>) {
-    info!("starting chat");
+    info!("TEST: starting chat");
     ui_tx
         .send_blocking(UiCommand::StartChat(cid.clone()))
         .unwrap();
     assert_event!(&ui_rx.recv_blocking().unwrap(), UiEvent::LoadedChats(_));
 
-    info!("selecting chat");
+    info!("TEST: selecting chat");
     ui_tx
         .send_blocking(UiCommand::SelectChat(cid.clone()))
         .unwrap();
@@ -118,7 +118,7 @@ fn send_msg(
     ui_tx: &Sender<UiCommand>,
     ui_rx: &Receiver<UiEvent>,
 ) {
-    info!("sending message");
+    info!("TEST: sending message");
     let msg: SharedMessage = Message::new(msg, Utc::now(), iden.id()).into();
 
     ui_tx
@@ -171,7 +171,7 @@ fn test_client_connect_exchange_disconnect() {
             wait(100);
             assert!(is_socket_bound_tcp(&lsock));
 
-            info!("Waiting for connection established event");
+            info!("TEST: Waiting for connection established event");
             assert_event!(
                 &ui_rx.recv_blocking().unwrap(),
                 UiEvent::SetKnownIdentities(_) // new identity from peer
@@ -194,7 +194,7 @@ fn test_client_connect_exchange_disconnect() {
 
                 send_msg("Wer das liest ist doof", &iden, cid, &ui_tx, &ui_rx);
 
-                info!("receiving message");
+                info!("TEST: receiving message");
                 assert_event!(
                     &ui_rx.recv_blocking().unwrap(),
                     UiEvent::SetKnownIdentities(_)
