@@ -259,8 +259,10 @@ impl P2PConnection {
             log::trace!("Trying to receive a frame");
             let frame = Frame::recv(tcp_stream).await?;
             log::debug!("Got a frame from {}", self.peer_identity.username());
+
             receiving_buffer.clear();
-            receiving_buffer.extend_from_slice(frame.data());
+            self.transport
+                .read_message(frame.data(), receiving_buffer)?;
             Ok(())
         })
         .await
