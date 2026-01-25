@@ -25,6 +25,7 @@ chrono.workspace = true
 fork.workspace = true
 ntest.workspace = true
 env_logger.workspace = true
+pretty_assertions.workspace = true
 
 [lints]
 workspace = true

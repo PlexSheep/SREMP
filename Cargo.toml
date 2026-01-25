@@ -32,6 +32,7 @@ thiserror = "2"
 fork = "0.6.0"
 env_logger = {version ="0.11", features = ["color"]}
 ntest = "0.9"
+pretty_assertions = "1.4"
 
 
 [workspace]

@@ -101,7 +101,7 @@ impl Message {
     }
 
     #[inline]
-    pub fn from_wire(&self, raw: &[u8]) -> CoreResult<Self> {
+    pub fn from_wire(raw: &[u8]) -> CoreResult<Self> {
         Ok(rmp_serde::from_slice(raw)?)
     }
 
