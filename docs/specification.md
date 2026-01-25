@@ -444,9 +444,19 @@ Different communication paths provide varying levels of metadata protection:
 
 ## 10. Implementation Considerations
 
-### 10.1 Message Serialization
+Data is sent over the via with `SREMP_DIRECT` frames.
 
-All messages use MessagePack binary serialization for efficiency and implementation simplicity. Text content uses UTF-8 encoding, and numeric values follow little-endian byte order conventions.
+```
+Frame := {
+    version: VersionHeader,
+    sequence_number: u32,
+    data: List<u8>,
+}
+```
+
+### 10.1 Datastrucutre Serialization
+
+Where appliciable, data uses MessagePack binary serialization for efficiency and implementation simplicity. Text content uses UTF-8 encoding, and numeric values follow little-endian byte order conventions.
 
 ### 10.2 Protocol Versioning
 
@@ -454,7 +464,7 @@ SREMP connections begin with a simple version announcement as the first transmit
 
 ```
 VERSION_HEADER := {
-    protocol_name: "SREMP",
+    protocol_name: "SREMP_DIRECT",
     version_major: u8,
     version_minor: u8
 }
@@ -465,6 +475,8 @@ For the initial protocol implementation, all connections use version 1.0. Future
 **Implementation Note**: The version header is transmitted before Noise handshake initiation to enable protocol-level compatibility checking.
 
 ### 10.3 Message Chunking
+
+**EXPERIMENTAL:** The section on message chunking is still work in progress.
 
 The Noise Protocol Framework limits individual transport messages to 65535 bytes (2^16 - 1). SREMP applications must fragment larger messages across multiple Noise frames:
 
@@ -483,6 +495,8 @@ CHUNKED_MESSAGE := {
 ```
 
 Receiving applications reassemble chunked messages using the message_id and chunk_index fields. Applications must implement appropriate buffering and timeout mechanisms to handle incomplete or out-of-order chunk delivery.
+
+Chunked messages will be payload for the `SREMP_DIRECT` frames mentioned above.
 
 ### 10.4 Error Handling
 
