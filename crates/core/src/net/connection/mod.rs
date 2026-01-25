@@ -36,6 +36,7 @@ macro_rules! delegate {
 pub struct P2PConnection {
     stream: net::TcpStream,
     peer_identity: Identity,
+    sequence_number: u32,
     transport: snow::TransportState,
     buffer: Box<[u8; MAX_FRAME_SIZE]>,
 }
@@ -85,6 +86,7 @@ impl Connection {
 impl P2PConnection {
     async fn connect_to(remote: std::net::SocketAddr, user: &UserIdentity) -> CoreResult<Self> {
         let mut tcp_stream = net::TcpStream::connect(remote).await?;
+        let mut seq = 0;
         log::debug!("Tcp Connection Established");
         let (peer_identity, transport) = Self::dead_switch(&mut tcp_stream, async |tcp_stream| {
             let mut noise = Self::noise_initiator(user)?;
@@ -95,7 +97,10 @@ impl P2PConnection {
 
             log::debug!("Sending Noise: `XX: --> e`");
             len = noise.write_message(&[], &mut buf)?;
-            Frame::from_payload(&buf[..len])?.send(tcp_stream).await?;
+            Frame::from_payload(seq, &buf[..len])?
+                .send(tcp_stream)
+                .await?;
+            seq += 1;
 
             log::debug!("Receiving: `XX: <-- e, ee, s, es`");
             let frame = Frame::recv(tcp_stream).await?;
@@ -103,9 +108,12 @@ impl P2PConnection {
 
             log::debug!("Sending Noise: `XX: --> s, se`");
             len = noise.write_message(&[], &mut buf)?;
-            Frame::from_payload(&buf[..len])?.send(tcp_stream).await?;
+            Frame::from_payload(seq, &buf[..len])?
+                .send(tcp_stream)
+                .await?;
+            seq += 1;
 
-            Self::post_handshake(&mut buf, tcp_stream, user, noise, remote).await
+            Self::post_handshake(&mut buf, &mut seq, tcp_stream, user, noise, remote).await
         })
         .await?;
 
@@ -113,6 +121,7 @@ impl P2PConnection {
             stream: tcp_stream,
             peer_identity,
             transport,
+            sequence_number: seq,
             buffer: Box::new([0; MAX_FRAME_SIZE]),
         })
     }
@@ -122,6 +131,7 @@ impl P2PConnection {
         remote: std::net::SocketAddr,
         user: &UserIdentity,
     ) -> CoreResult<Self> {
+        let mut seq = 0;
         let (peer_identity, transport) = Self::dead_switch(&mut tcp_stream, async |tcp_stream| {
             let mut noise = Self::noise_responder(user)?;
             let mut buf = [0u8; MAX_FRAME_SIZE];
@@ -135,13 +145,16 @@ impl P2PConnection {
 
             log::debug!("Sending Noise: `XX: <-- e, ee, s, es`");
             let len = noise.write_message(&[], &mut buf)?;
-            Frame::from_payload(&buf[..len])?.send(tcp_stream).await?;
+            Frame::from_payload(seq, &buf[..len])?
+                .send(tcp_stream)
+                .await?;
+            seq += 1;
 
             log::debug!("Receiving: `XX: --> s, se`");
             frame = Frame::recv(tcp_stream).await?;
             _ = noise.read_message(frame.data(), &mut buf)?;
 
-            Self::post_handshake(&mut buf, tcp_stream, user, noise, remote).await
+            Self::post_handshake(&mut buf, &mut seq, tcp_stream, user, noise, remote).await
         })
         .await?;
 
@@ -149,12 +162,14 @@ impl P2PConnection {
             stream: tcp_stream,
             peer_identity,
             transport,
+            sequence_number: seq,
             buffer: Box::new([0; MAX_FRAME_SIZE]),
         })
     }
 
     async fn post_handshake(
         buf: &mut [u8; MAX_FRAME_SIZE],
+        seq: &mut u32,
         stream: &mut net::TcpStream,
         user: &UserIdentity,
         noise: snow::HandshakeState,
@@ -181,7 +196,8 @@ impl P2PConnection {
 
         log::debug!("Sending identity to peer");
         let mut len = transport.write_message(&rmp_serde::to_vec(&user.identity)?, buf)?;
-        Frame::from_payload(&buf[..len])?.send(stream).await?;
+        Frame::from_payload(*seq, &buf[..len])?.send(stream).await?;
+        *seq += 1;
 
         log::debug!("Receiving identity from peer");
         let frame = Frame::recv(stream).await?;
@@ -245,7 +261,9 @@ impl P2PConnection {
             let len = self.transport.write_message(data, &mut *self.buffer)?;
             debug_assert_eq!(self.buffer[..len].len(), len);
 
-            Frame::from_payload(&self.buffer[..len])?
+            self.sequence_number = self.sequence_number.wrapping_add(1);
+
+            Frame::from_payload(self.sequence_number, &self.buffer[..len])?
                 .send(tcp_stream)
                 .await?;
             Ok(())
@@ -294,5 +312,10 @@ impl P2PConnection {
 
     fn noise_responder(user: &UserIdentity) -> CoreResult<snow::HandshakeState> {
         Ok(Self::noise_builder(user)?.build_responder()?)
+    }
+
+    #[inline(always)]
+    pub fn sequence_number(&self) -> u32 {
+        self.sequence_number
     }
 }
