@@ -11,7 +11,11 @@ mod version_header;
 pub use version_header::*;
 
 pub const MAX_FRAME_SIZE: usize = 65535;
-pub const MAX_FRAME_PAYLOAD_SIZE: usize = MAX_FRAME_SIZE - VersionHeader::BYTE_LENGTH;
+#[allow(clippy::cast_possible_truncation)]
+pub const FRAME_OVERHEAD: u16 = u16::BITS as u16 / 2u16 // 2 bytes for the length of the frame
+        + VersionHeader::BYTE_LENGTH as u16 // 14 bytes for the version of the protocol used
+;
+pub const MAX_FRAME_PAYLOAD_SIZE: usize = MAX_FRAME_SIZE - FRAME_OVERHEAD as usize;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[must_use]
@@ -47,7 +51,7 @@ impl Frame {
 
     pub async fn send(self, stream: &mut net::TcpStream) -> CoreResult<()> {
         log::debug!("Sending Frame");
-        log::trace!("Sending Length: {}", self.len());
+        log::trace!("Sending Payload-Length: {}", self.len());
         stream.write_u16(self.len()).await?;
 
         log::trace!("Sending version: {}", self.version());
@@ -63,12 +67,13 @@ impl Frame {
 
     pub async fn recv(stream: &mut net::TcpStream) -> CoreResult<Self> {
         log::debug!("Receiving Frame");
-        log::trace!("Reading Length");
-        let len = stream.read_u16().await? as usize;
-        if len > MAX_FRAME_SIZE {
-            return Err(CoreError::FrameTooLarge(len));
+        log::trace!("Reading Payload-Length");
+        let plen = stream.read_u16().await? as usize;
+        check_payload_length(plen)?;
+        if plen > MAX_FRAME_SIZE {
+            return Err(CoreError::FrameTooLarge(plen));
         }
-        log::trace!("Length: {len}");
+        log::trace!("Payload-Length: {plen}");
 
         log::trace!("Reading version");
         let mut buf = [0; VersionHeader::BYTE_LENGTH];
@@ -76,8 +81,8 @@ impl Frame {
         let version = check_version(&buf)?;
 
         log::trace!("Reading Data");
-        let mut buf = vec![0; len - VersionHeader::BYTE_LENGTH];
-        buf.reserve_exact(len);
+        let mut buf = vec![0; plen];
+        buf.reserve_exact(plen);
         stream.read_exact(&mut buf).await?;
         log::trace!("Data: {buf:x?}");
 
@@ -89,7 +94,7 @@ impl Frame {
     #[inline(always)]
     #[allow(clippy::cast_possible_truncation)]
     pub fn len(&self) -> u16 {
-        VersionHeader::BYTE_LENGTH as u16 + self.data.len() as u16 // cannot construct a frame that is too big
+        self.data.len() as u16 // cannot construct a frame that is too big
     }
 
     #[inline(always)]
@@ -121,9 +126,9 @@ fn check_version(raw_data: &[u8; VersionHeader::BYTE_LENGTH]) -> CoreResult<Vers
 }
 
 #[inline]
-fn check_payload_length(len: usize) -> CoreResult<()> {
-    if len > MAX_FRAME_PAYLOAD_SIZE {
-        return Err(CoreError::FrameTooLarge(len));
+fn check_payload_length(plen: usize) -> CoreResult<()> {
+    if plen > MAX_FRAME_PAYLOAD_SIZE {
+        return Err(CoreError::FrameTooLarge(plen));
     }
     Ok(())
 }
