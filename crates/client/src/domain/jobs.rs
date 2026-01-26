@@ -49,7 +49,7 @@ impl ClientDomain {
         log::info!("Processing Net Event: {event}");
         match event {
             NetworkEvent::ListenerStopped => self.send_ui_evt(UiEvent::ListenerStopped).await,
-            NetworkEvent::ListenerFailed(core_error) => todo!(),
+            NetworkEvent::ListenerFailed(_core_error) => todo!(),
             NetworkEvent::ListenerStarted(addr) => {
                 self.send_ui_evt(UiEvent::ListenerStarted(addr)).await
             }
@@ -67,7 +67,7 @@ impl ClientDomain {
                 self.send_ui_evt(UiEvent::ConnectionEstablished(remote, iden.id()))
                     .await
             }
-            NetworkEvent::MessageSent(remote, key, data) => {
+            NetworkEvent::MessageSent(_remote, _key, _data) => {
                 todo!()
             }
             NetworkEvent::IncomingMessage(remote, key, data) => {
@@ -161,9 +161,9 @@ impl ClientDomain {
 
     pub(crate) async fn incoming_message(
         &self,
-        remote: SocketAddr,
-        id: ContactId,
-        data: Arc<Vec<u8>>,
+        _remote: SocketAddr,
+        _id: ContactId,
+        _data: Arc<Vec<u8>>,
     ) -> CoreResult<()> {
         todo!()
     }
